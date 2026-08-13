@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Acompanhamento — Revisões e Tacógrafos | Grupo Maroni</title>
+<style>
+:root {
+  --bg:#f3f3f1; --surface:#ffffff; --surface-2:#f9f9f7;
+  --border:#e8e8e4; --border-h:#d5d5d0;
+  --ink:#111; --ink-2:#4a4a47; --ink-3:#8a8a85;
+  --accent:#2a78d6;
+  --crit:#b52a2a; --crit-dark:#8b1a1a; --warn:#b87a00; --serious:#c05a1a; --good:#0a7d0a;
+  --crit-bg:rgba(181,42,42,.09); --crit-dark-bg:rgba(139,26,26,.09);
+  --warn-bg:rgba(184,122,0,.09); --serious-bg:rgba(192,90,26,.09); --good-bg:rgba(10,125,10,.09);
+  --shadow:0 1px 4px rgba(0,0,0,.05);
+  --brand:#ffe600;
+  color-scheme:light;
+}
+:root[data-theme="dark"] {
+  --bg:#0e0e0d; --surface:#1b1b19; --surface-2:#232322;
+  --border:#2e2e2b; --border-h:#3d3d39;
+  --ink:#f0f0ec; --ink-2:#b0b0a8; --ink-3:#7a7a74;
+  --accent:#5a9cf0;
+  --crit:#e87070; --crit-dark:#ff5555; --warn:#d49a20; --serious:#ec835a; --good:#2cb82c;
+  --crit-bg:rgba(232,112,112,.12); --crit-dark-bg:rgba(255,85,85,.15);
+  --warn-bg:rgba(212,154,32,.12); --serious-bg:rgba(236,131,90,.12); --good-bg:rgba(44,184,44,.12);
+  --shadow:0 1px 4px rgba(0,0,0,.25);
+  --brand:#ffe600;
+  color-scheme:dark;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;line-height:1.5}
+
+/* ====== TOP BAR ====== */
+.topbar{background:var(--brand);display:flex;align-items:center;justify-content:space-between;height:72px;padding:0 clamp(16px,4vw,48px)}
+.topbar-left{display:flex;align-items:center;gap:16px}
+.topbar-logo{height:60px;border-radius:4px}
+.topbar-title{font-size:16px;font-weight:700;color:#111;text-transform:uppercase;letter-spacing:.8px}
+.topbar-nav{display:flex;align-items:center;gap:4px}
+.topbar-nav a{font-size:13px;font-weight:600;color:#111;text-decoration:none;text-transform:uppercase;letter-spacing:.5px;padding:7px 16px;border-radius:5px;transition:.15s;opacity:.65}
+.topbar-nav a:hover,.topbar-nav a.active{opacity:1;background:rgba(0,0,0,.1)}
+.topbar-actions{display:flex;align-items:center;gap:8px}
+.topbar-btn{background:rgba(0,0,0,.08);border:none;border-radius:6px;padding:8px 14px;cursor:pointer;color:#111;font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px;transition:.15s}
+.topbar-btn:hover{background:rgba(0,0,0,.16)}
+:root[data-theme="dark"] .topbar{background:#1a1a18;border-bottom:1px solid var(--border)}
+:root[data-theme="dark"] .topbar-title,:root[data-theme="dark"] .topbar-nav a,:root[data-theme="dark"] .topbar-btn{color:var(--ink)}
+
+.subheader{padding:20px clamp(16px,4vw,48px) 0;display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:10px;max-width:1440px;margin:0 auto}
+.subheader h2{font-size:22px;font-weight:600;letter-spacing:-.3px}
+.subheader .meta{font-size:13px;color:var(--ink-3)}
+
+.wrap{max-width:1440px;margin:0 auto;padding:22px clamp(16px,4vw,48px) 56px}
+
+/* Pills */
+.pills{display:inline-flex;gap:6px;margin-bottom:20px}
+.pill{padding:8px 20px;border-radius:22px;cursor:pointer;font-size:14px;font-weight:500;color:var(--ink-3);background:var(--surface);border:1px solid var(--border);transition:.15s}
+.pill.active{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.pill:hover:not(.active){border-color:var(--border-h);color:var(--ink-2)}
+
+/* KPI */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:20px}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px 22px}
+.kpi .kl{font-size:12px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.5px;font-weight:500}
+.kpi .kv{font-size:34px;font-weight:700;line-height:1.15;margin-top:4px}
+.kpi .kd{font-size:12px;color:var(--ink-3);margin-top:3px}
+.kpi.c .kv{color:var(--crit)} .kpi.cd .kv{color:var(--crit-dark)}
+.kpi.w .kv{color:var(--warn)} .kpi.s .kv{color:var(--serious)}
+.kpi.g .kv{color:var(--good)} .kpi.a .kv{color:var(--accent)}
+
+/* Filters */
+.filters{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+.fsel,.finp{font-size:13.5px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--ink);min-width:140px}
+.finp{min-width:240px}
+.flab{font-size:12px;color:var(--ink-3);font-weight:500}
+
+/* Table */
+.tw{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:var(--shadow)}
+.ts{overflow-x:auto;max-height:640px;overflow-y:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+thead th{background:var(--surface-2);padding:12px 14px;text-align:left;font-weight:600;font-size:12px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.4px;position:sticky;top:0;z-index:1;border-bottom:1px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none}
+thead th:hover{color:var(--ink)}
+thead th .sa{margin-left:4px;opacity:.3;font-size:10px}
+thead th.sorted .sa{opacity:1}
+tbody td{padding:11px 14px;border-bottom:1px solid var(--border);white-space:nowrap}
+tbody tr:hover{background:var(--surface-2)}
+tbody tr:last-child td{border-bottom:none}
+
+/* Badges */
+.b{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:4px;font-size:12px;font-weight:600;white-space:nowrap}
+.b-c{background:var(--crit-bg);color:var(--crit)}
+.b-cd{background:var(--crit-dark-bg);color:var(--crit-dark)}
+.b-w{background:var(--warn-bg);color:var(--warn)}
+.b-s{background:var(--serious-bg);color:var(--serious)}
+
+/* Pagination */
+.pag{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-top:1px solid var(--border);font-size:13px;color:var(--ink-3)}
+.pb{display:flex;gap:4px}
+.pb button{padding:5px 11px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--ink-3);cursor:pointer;font-size:12px}
+.pb button:hover{color:var(--ink)}
+.pb button:disabled{opacity:.3;cursor:default}
+.pb button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+.page{display:none}.page.active{display:block}
+.section{display:none}.section.active{display:block}
+.empty{text-align:center;padding:64px 24px;color:var(--ink-3)}
+.empty h3{font-size:18px;font-weight:500;margin-bottom:8px}
+
+@media(max-width:768px){
+  .topbar-nav{display:none}
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .filters{flex-direction:column}
+  .fsel,.finp{width:100%}
+}
+
+.status-bar{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 16px;margin-bottom:16px;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-2)}
+.status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.status-dot.online{background:#0ca30c}
+.status-dot.offline{background:#d03b3b}
+.status-dot.loading{background:#eda100;animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <img class="topbar-logo" src="data:image/jpeg;base64,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" alt="Grupo Maroni">
+    <span class="topbar-title">Manutenção Corporativa</span>
+  </div>
+  <div class="topbar-nav">
+    <a href="#" class="active" onclick="goPage('pend');return false">Pendentes</a>
+    <a href="#" onclick="goPage('done');return false">Realizados</a>
+  </div>
+  <div class="topbar-actions">
+    <button class="topbar-btn" onclick="exportCSV()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 7l5 5 5-5M7 12V1M1 13h12"/></svg>
+      Exportar
+    </button>
+    <button class="topbar-btn" onclick="toggleTheme()" title="Alternar tema">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4.5"/><path d="M12 1.5v2M12 20.5v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1.5 12h2M20.5 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+    </button>
+  </div>
+</div>
+
+<div class="subheader">
+  <h2>Acompanhamento — Revisões e Tacógrafos</h2>
+  <div class="meta" id="dtNow"></div>
+</div>
+
+<div class="wrap">
+<div class="status-bar" id="statusBar">
+  <span class="status-dot loading" id="statusDot"></span>
+  <span id="statusText">Carregando dados do Excel Online...</span>
+</div>
+  <div id="p-pend" class="page active">
+    <div class="pills">
+      <div class="pill active" onclick="goSec('rev')">Revisões</div>
+      <div class="pill" onclick="goSec('tac')">Tacógrafos</div>
+    </div>
+
+    <div id="sec-rev" class="section active">
+      <div class="kpis" id="kpi-rev"></div>
+      <div class="filters" id="fil-rev"></div>
+      <div class="tw"><div class="ts">
+        <table id="t-rev"><thead><tr>
+          <th data-c="classificacao">Status <span class="sa">&#9650;</span></th>
+          <th data-c="placa">Placa <span class="sa">&#9650;</span></th>
+          <th data-c="marca">Marca <span class="sa">&#9650;</span></th>
+          <th data-c="modelo">Modelo <span class="sa">&#9650;</span></th>
+          <th data-c="operacao">Operação <span class="sa">&#9650;</span></th>
+          <th data-c="km_atual">KM Atual <span class="sa">&#9650;</span></th>
+          <th data-c="km_prox">KM Próx. Revisão <span class="sa">&#9650;</span></th>
+          <th data-c="km_atraso">KM Atraso/Vencer <span class="sa">&#9650;</span></th>
+          <th data-c="tipo_revisao">Tipo Revisão <span class="sa">&#9650;</span></th>
+          <th data-c="tipo_contrato">Contrato <span class="sa">&#9650;</span></th>
+          <th data-c="data_ult_revisao">Últ. Revisão <span class="sa">&#9650;</span></th>
+        </tr></thead><tbody id="tb-rev"></tbody></table>
+      </div><div class="pag" id="pg-rev"></div></div>
+    </div>
+
+    <div id="sec-tac" class="section">
+      <div class="kpis" id="kpi-tac"></div>
+      <div class="filters" id="fil-tac"></div>
+      <div class="tw"><div class="ts">
+        <table id="t-tac"><thead><tr>
+          <th data-c="classificacao">Status <span class="sa">&#9650;</span></th>
+          <th data-c="placa">Placa <span class="sa">&#9650;</span></th>
+          <th data-c="marca">Marca <span class="sa">&#9650;</span></th>
+          <th data-c="modelo">Modelo <span class="sa">&#9650;</span></th>
+          <th data-c="operacao">Operação <span class="sa">&#9650;</span></th>
+          <th data-c="data_emissao">Dt. Emissão <span class="sa">&#9650;</span></th>
+          <th data-c="data_vencimento">Dt. Vencimento <span class="sa">&#9650;</span></th>
+          <th data-c="prazo">Prazo (dias) <span class="sa">&#9650;</span></th>
+          <th data-c="obs">Observações <span class="sa">&#9650;</span></th>
+        </tr></thead><tbody id="tb-tac"></tbody></table>
+      </div><div class="pag" id="pg-tac"></div></div>
+    </div>
+  </div>
+
+  <div id="p-done" class="page">
+    <div class="empty">
+      <h3>Veículos em dia</h3>
+      <p style="max-width:420px;margin:0 auto;font-size:14px;line-height:1.6">Esta aba exibirá os veículos com revisões e tacógrafos em dia em uma futura atualização.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== CONFIGURAÇÃO =====
+var WEBHOOK_URL = 'https://n8n.srv1162985.hstgr.cloud/webhook/painel-revisoes-data';
+var REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutos
+
+var R = [];
+var T = [];
+var lastUpdate = null;
+var pg='pend', sc='rev';
+var rS={p:1,pp:50,sc:'km_atraso',sd:'asc',f:{c:'',m:'',o:'',q:''}};
+var tS={p:1,pp:50,sc:'prazo',sd:'asc',f:{c:'',m:'',o:'',q:''}};
+var countdown = null;
+var nextRefreshAt = 0;
+
+function setStatus(type, msg) {
+  var dot = document.getElementById('statusDot');
+  var txt = document.getElementById('statusText');
+  dot.className = 'status-dot ' + type;
+  txt.textContent = msg;
+}
+
+function startCountdown() {
+  if (countdown) clearInterval(countdown);
+  nextRefreshAt = Date.now() + REFRESH_INTERVAL;
+  countdown = setInterval(function() {
+    var remaining = Math.max(0, Math.round((nextRefreshAt - Date.now()) / 1000));
+    var min = Math.floor(remaining / 60);
+    var sec = remaining % 60;
+    var timeStr = min > 0 ? min + ' min' : sec + ' seg';
+    var dot = document.getElementById('statusDot');
+    if (dot.classList.contains('online')) {
+      document.getElementById('statusText').textContent =
+        'Conectado ao Excel Online — ' + R.length + ' revisões, ' + T.length + ' tacógrafos — Próx. atualização em ' + timeStr;
+    }
+    if (remaining <= 0) clearInterval(countdown);
+  }, 1000);
+}
+
+function mapRevisoes(arr) {
+  return (arr || []).map(function(r) {
+    return {
+      classificacao: r.status || '',
+      placa: r.placa || '',
+      marca: r.marca || '',
+      modelo: r.modelo || '',
+      operacao: r.operacao || '',
+      km_atual: r.kmAtual != null ? Number(r.kmAtual) || 0 : 0,
+      km_prox: r.kmProxRevisao != null ? Number(r.kmProxRevisao) || 0 : 0,
+      km_atraso: r.kmAtraso != null ? Number(r.kmAtraso) || 0 : 0,
+      tipo_revisao: r.tipoRevisao || '',
+      tipo_contrato: r.tipoContrato || '',
+      data_ult_revisao: r.dataUltRevisao || ''
+    };
+  });
+}
+
+function mapTacografos(arr) {
+  return (arr || []).map(function(t) {
+    return {
+      classificacao: t.status || '',
+      placa: t.placa || '',
+      marca: t.marca || '',
+      modelo: t.modelo || '',
+      operacao: t.operacao || '',
+      data_emissao: t.dataEmissao || '',
+      data_vencimento: t.dataVencimento || '',
+      prazo: t.prazo != null ? Number(t.prazo) || 0 : 0,
+      obs: 'CERTIFICADO FINAL'
+    };
+  });
+}
+
+function updateDateTime(data) {
+  var dt = data.atualizado ? new Date(data.atualizado) : new Date();
+  lastUpdate = dt;
+  var dtStr = dt.toLocaleDateString('pt-BR', {day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  document.getElementById('dtNow').textContent = 'Atualizado em ' + dtStr;
+}
+
+function refreshUI() {
+  filRev(); filTac(); dRev(); dTac();
+}
+
+function fetchData() {
+  setStatus('loading', 'Atualizando dados do Excel Online...');
+  fetch(WEBHOOK_URL)
+    .then(function(resp) {
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      return resp.json();
+    })
+    .then(function(data) {
+      // Sucesso: atualiza dados
+      R = mapRevisoes(data.revisoes);
+      T = mapTacografos(data.tacografos);
+      updateDateTime(data);
+
+      // Log de debug no console
+      if (data.debug) {
+        console.log('[Painel] Debug revisoes:', JSON.stringify(data.debug.revisoes));
+        console.log('[Painel] Debug tacografos:', JSON.stringify(data.debug.tacografos));
+      }
+      console.log('[Painel] Revisoes: ' + R.length + ', Tacografos: ' + T.length);
+
+      setStatus('online', 'Conectado ao Excel Online — ' + R.length + ' revisões, ' + T.length + ' tacógrafos — Próx. atualização em 5 min');
+      startCountdown();
+      refreshUI();
+    })
+    .catch(function(e) {
+      console.error('[Painel] Erro ao buscar dados:', e);
+      if (R.length === 0 && T.length === 0) {
+        setStatus('offline', 'Erro ao conectar — verifique se o workflow n8n está ativo. Tentando novamente em 5 min...');
+      } else {
+        // Mantém dados anteriores, só muda o status
+        setStatus('offline', 'Erro na atualização — usando dados da última leitura. Tentando novamente em 5 min...');
+        startCountdown();
+      }
+      // NÃO limpa R e T — dados permanecem da última leitura bem-sucedida
+      refreshUI();
+    });
+}
+
+// ===== Inicialização =====
+document.getElementById('dtNow').textContent = 'Carregando dados...';
+fetchData();
+setInterval(fetchData, REFRESH_INTERVAL);
+
+function goPage(p){
+  pg=p;
+  document.querySelectorAll('.topbar-nav a').forEach(function(a,i){a.classList.toggle('active',(i===0&&p==='pend')||(i===1&&p==='done'))});
+  document.querySelectorAll('.page').forEach(function(e){e.classList.remove('active')});
+  document.getElementById('p-'+p).classList.add('active');
+}
+function goSec(s){
+  sc=s;
+  document.querySelectorAll('.pill').forEach(function(t,i){t.classList.toggle('active',(i===0&&s==='rev')||(i===1&&s==='tac'))});
+  document.querySelectorAll('.section').forEach(function(e){e.classList.remove('active')});
+  document.getElementById('sec-'+s).classList.add('active');
+}
+function toggleTheme(){document.documentElement.dataset.theme=document.documentElement.dataset.theme==='dark'?'light':'dark'}
+function fmt(n){return n!=null?n.toLocaleString('pt-BR'):'—'}
+function bc(c){return c==='CRÍTICO'?'b-cd':c==='EM ATRASO'||c==='VENCIDO'?'b-c':c==='ANTECIPAÇÃO'?'b-w':c==='VENCE HOJE'?'b-s':''}
+function uv(d,k){return[].concat(d).map(function(x){return x[k]}).filter(Boolean).filter(function(v,i,a){return a.indexOf(v)===i}).sort()}
+
+function kpiRev(d){
+  var tot=d.length,cr=d.filter(function(x){return x.classificacao==='CRÍTICO'}).length,at=d.filter(function(x){return x.classificacao==='EM ATRASO'}).length,an=d.filter(function(x){return x.classificacao==='ANTECIPAÇÃO'}).length;
+  document.getElementById('kpi-rev').innerHTML=
+    '<div class="kpi a"><div class="kl">Total Pendentes</div><div class="kv">'+tot+'</div><div class="kd">veículos filtrados</div></div>'+
+    '<div class="kpi cd"><div class="kl">Crítico</div><div class="kv">'+cr+'</div><div class="kd">KM abaixo de -5.000</div></div>'+
+    '<div class="kpi c"><div class="kl">Em Atraso</div><div class="kv">'+at+'</div><div class="kd">KM 0 a -5.000</div></div>'+
+    '<div class="kpi w"><div class="kl">Antecipação</div><div class="kv">'+an+'</div><div class="kd">próx. da revisão</div></div>';
+}
+function kpiTac(d){
+  var tot=d.length,v=d.filter(function(x){return x.classificacao==='VENCIDO'}).length,h=d.filter(function(x){return x.classificacao==='VENCE HOJE'}).length,a=d.filter(function(x){return x.classificacao==='ANTECIPAÇÃO'}).length;
+  document.getElementById('kpi-tac').innerHTML=
+    '<div class="kpi a"><div class="kl">Total Pendentes</div><div class="kv">'+tot+'</div><div class="kd">tacógrafos filtrados</div></div>'+
+    '<div class="kpi c"><div class="kl">Vencidos</div><div class="kv">'+v+'</div><div class="kd">prazo expirado</div></div>'+
+    '<div class="kpi s"><div class="kl">Vence Hoje</div><div class="kv">'+h+'</div><div class="kd">prazo = 0</div></div>'+
+    '<div class="kpi w"><div class="kl">Antecipação</div><div class="kv">'+a+'</div><div class="kd">1 a 30 dias</div></div>';
+}
+
+function filRev(){
+  var cs=['CRÍTICO','EM ATRASO','ANTECIPAÇÃO'],ms=uv(R,'marca'),os=uv(R,'operacao');
+  document.getElementById('fil-rev').innerHTML=
+    '<span class="flab">Classificação</span><select class="fsel" onchange="rS.f.c=this.value;rS.p=1;dRev()"><option value="">Todas</option>'+cs.map(function(c){return '<option>'+c+'</option>'}).join('')+'</select>'+
+    '<span class="flab">Marca</span><select class="fsel" onchange="rS.f.m=this.value;rS.p=1;dRev()"><option value="">Todas</option>'+ms.map(function(m){return '<option>'+m+'</option>'}).join('')+'</select>'+
+    '<span class="flab">Operação</span><select class="fsel" onchange="rS.f.o=this.value;rS.p=1;dRev()"><option value="">Todas</option>'+os.map(function(o){return '<option>'+o+'</option>'}).join('')+'</select>'+
+    '<input class="finp" type="search" placeholder="Buscar placa, modelo..." oninput="rS.f.q=this.value.toUpperCase();rS.p=1;dRev()">';
+}
+function filTac(){
+  var cs=['VENCIDO','VENCE HOJE','ANTECIPAÇÃO'],ms=uv(T,'marca'),os=uv(T,'operacao');
+  document.getElementById('fil-tac').innerHTML=
+    '<span class="flab">Classificação</span><select class="fsel" onchange="tS.f.c=this.value;tS.p=1;dTac()"><option value="">Todas</option>'+cs.map(function(c){return '<option>'+c+'</option>'}).join('')+'</select>'+
+    '<span class="flab">Marca</span><select class="fsel" onchange="tS.f.m=this.value;tS.p=1;dTac()"><option value="">Todas</option>'+ms.map(function(m){return '<option>'+m+'</option>'}).join('')+'</select>'+
+    '<span class="flab">Operação</span><select class="fsel" onchange="tS.f.o=this.value;tS.p=1;dTac()"><option value="">Todas</option>'+os.map(function(o){return '<option>'+o+'</option>'}).join('')+'</select>'+
+    '<input class="finp" type="search" placeholder="Buscar placa, modelo..." oninput="tS.f.q=this.value.toUpperCase();tS.p=1;dTac()">';
+}
+
+function srt(d,c,dir){return d.sort(function(a,b){var va=a[c],vb=b[c];if(typeof va==='number'&&typeof vb==='number')return dir==='asc'?va-vb:vb-va;va=String(va||'');vb=String(vb||'');return dir==='asc'?va.localeCompare(vb,'pt-BR'):vb.localeCompare(va,'pt-BR')})}
+function fR(){var d=[].concat(R);var f=rS.f;if(f.c)d=d.filter(function(x){return x.classificacao===f.c});if(f.m)d=d.filter(function(x){return x.marca===f.m});if(f.o)d=d.filter(function(x){return x.operacao===f.o});if(f.q)d=d.filter(function(x){return(x.placa+' '+x.modelo+' '+x.marca).toUpperCase().indexOf(f.q)>=0});return srt(d,rS.sc,rS.sd)}
+function fT(){var d=[].concat(T);var f=tS.f;if(f.c)d=d.filter(function(x){return x.classificacao===f.c});if(f.m)d=d.filter(function(x){return x.marca===f.m});if(f.o)d=d.filter(function(x){return x.operacao===f.o});if(f.q)d=d.filter(function(x){return(x.placa+' '+x.modelo+' '+x.marca).toUpperCase().indexOf(f.q)>=0});return srt(d,tS.sc,tS.sd)}
+
+function dRev(){
+  var fd=fR();kpiRev(fd);var s=(rS.p-1)*rS.pp,pd=fd.slice(s,s+rS.pp);
+  var tb=document.getElementById('tb-rev');
+  tb.innerHTML=pd.length?pd.map(function(r){return '<tr>'+
+    '<td><span class="b '+bc(r.classificacao)+'">'+r.classificacao+'</span></td>'+
+    '<td style="font-weight:600">'+r.placa+'</td><td>'+r.marca+'</td><td>'+r.modelo+'</td><td>'+r.operacao+'</td>'+
+    '<td style="font-variant-numeric:tabular-nums">'+fmt(r.km_atual)+'</td>'+
+    '<td style="font-variant-numeric:tabular-nums">'+fmt(r.km_prox)+'</td>'+
+    '<td style="font-variant-numeric:tabular-nums;font-weight:600;color:'+(r.classificacao==='CRÍTICO'?'var(--crit-dark)':r.km_atraso<0?'var(--crit)':'var(--warn)')+'">'+fmt(r.km_atraso)+'</td>'+
+    '<td>'+(r.tipo_revisao||'—')+'</td><td>'+r.tipo_contrato+'</td><td>'+(r.data_ult_revisao||'—')+'</td>'+
+    '</tr>'}).join(''):'<tr><td colspan="11" style="text-align:center;padding:40px;color:var(--ink-3)">Nenhum registro encontrado</td></tr>';
+  pag('pg-rev',fd.length,rS,'dRev');updH('t-rev',rS);
+}
+function dTac(){
+  var fd=fT();kpiTac(fd);var s=(tS.p-1)*tS.pp,pd=fd.slice(s,s+tS.pp);
+  var tb=document.getElementById('tb-tac');
+  tb.innerHTML=pd.length?pd.map(function(t){return '<tr>'+
+    '<td><span class="b '+bc(t.classificacao)+'">'+t.classificacao+'</span></td>'+
+    '<td style="font-weight:600">'+t.placa+'</td><td>'+t.marca+'</td><td>'+t.modelo+'</td><td>'+t.operacao+'</td>'+
+    '<td>'+(t.data_emissao||'—')+'</td><td>'+(t.data_vencimento||'—')+'</td>'+
+    '<td style="font-variant-numeric:tabular-nums;font-weight:600;color:'+(t.prazo<0?'var(--crit)':t.prazo===0?'var(--serious)':'var(--warn)')+'">'+t.prazo+' dias</td>'+
+    '<td style="max-width:220px;overflow:hidden;text-overflow:ellipsis" title="'+(t.obs||'')+'">'+(t.obs||'—')+'</td>'+
+    '</tr>'}).join(''):'<tr><td colspan="9" style="text-align:center;padding:40px;color:var(--ink-3)">Nenhum registro encontrado</td></tr>';
+  pag('pg-tac',fd.length,tS,'dTac');updH('t-tac',tS);
+}
+
+function pag(id,tot,st,fn){
+  var pp=Math.ceil(tot/st.pp),el=document.getElementById(id);
+  if(pp<=1){el.innerHTML='<span>'+tot+' registro(s)</span><span></span>';return}
+  var sv=fn==='dRev'?'rS':'tS';
+  var b='<button '+(st.p<=1?'disabled':'')+' onclick="'+sv+'.p--;'+fn+'()">&lsaquo;</button>';
+  var s=Math.max(1,st.p-2),e=Math.min(pp,st.p+2);
+  if(s>1)b+='<button onclick="'+sv+'.p=1;'+fn+'()">1</button>';
+  if(s>2)b+='<span style="padding:0 4px;color:var(--ink-3)">&#8230;</span>';
+  for(var i=s;i<=e;i++)b+='<button class="'+(i===st.p?'on':'')+'" onclick="'+sv+'.p='+i+';'+fn+'()">'+i+'</button>';
+  if(e<pp-1)b+='<span style="padding:0 4px;color:var(--ink-3)">&#8230;</span>';
+  if(e<pp)b+='<button onclick="'+sv+'.p='+pp+';'+fn+'()">'+pp+'</button>';
+  b+='<button '+(st.p>=pp?'disabled':'')+' onclick="'+sv+'.p++;'+fn+'()">&rsaquo;</button>';
+  el.innerHTML='<span>'+tot+' registros &mdash; Página '+st.p+' de '+pp+'</span><div class="pb">'+b+'</div>';
+}
+function updH(tid,st){document.querySelectorAll('#'+tid+' thead th').forEach(function(th){th.classList.toggle('sorted',th.dataset.c===st.sc);var a=th.querySelector('.sa');if(a)a.innerHTML=th.dataset.c===st.sc?(st.sd==='asc'?'&#9650;':'&#9660;'):'&#9650;'})}
+
+document.querySelectorAll('#t-rev thead th').forEach(function(th){th.addEventListener('click',function(){if(rS.sc===th.dataset.c)rS.sd=rS.sd==='asc'?'desc':'asc';else{rS.sc=th.dataset.c;rS.sd='asc'};dRev()})});
+document.querySelectorAll('#t-tac thead th').forEach(function(th){th.addEventListener('click',function(){if(tS.sc===th.dataset.c)tS.sd=tS.sd==='asc'?'desc':'asc';else{tS.sc=th.dataset.c;tS.sd='asc'};dTac()})});
+
+function exportCSV(){
+  var csv,fn;
+  if(sc==='rev'){var d=fR();csv='Classificação;Placa;Marca;Modelo;Operação;KM Atual;KM Próx Rev;KM Atraso;Tipo Revisão;Contrato;Últ Revisão\n';csv+=d.map(function(r){return[r.classificacao,r.placa,r.marca,r.modelo,r.operacao,r.km_atual,r.km_prox,r.km_atraso,r.tipo_revisao,r.tipo_contrato,r.data_ult_revisao].join(';')}).join('\n');fn='revisoes_pendentes.csv'}
+  else{var d=fT();csv='Classificação;Placa;Marca;Modelo;Operação;Emissão;Vencimento;Prazo (dias);Observações\n';csv+=d.map(function(t){return[t.classificacao,t.placa,t.marca,t.modelo,t.operacao,t.data_emissao,t.data_vencimento,t.prazo,t.obs].join(';')}).join('\n');fn='tacografos_pendentes.csv'}
+  var a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'}));a.download=fn;a.click();
+}
+
+filRev();filTac();dRev();dTac();
+</script>
+</body>
+</html>
