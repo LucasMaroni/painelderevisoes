@@ -1,0 +1,1472 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SGBD | Grupo Maroni</title>
+<style>
+:root{
+  --bg:#eceae6;--surface:#fff;--surface-2:#f5f4f1;
+  --border:#dddbd6;--border-h:#bbb;
+  --ink:#111;--ink-2:#4a4a47;--ink-3:#7a7a75;
+  --accent:#2563eb;--accent-l:rgba(37,99,235,.08);
+  --brand:#ffe600;
+  --sh:0 2px 6px rgba(0,0,0,.09),0 1px 2px rgba(0,0,0,.06);
+  --sh-panel:0 2px 10px rgba(0,0,0,.08),0 1px 3px rgba(0,0,0,.06);
+  --green:#16a34a;--red:#dc2626;--amber:#d97706;--orange:#ea580c;
+  color-scheme:light;
+}
+:root[data-theme="dark"]{
+  --bg:#0a0a0a;--surface:#161616;--surface-2:#1e1e1e;
+  --border:#2a2a2a;--border-h:#3a3a3a;
+  --ink:#e8e8e8;--ink-2:#a0a0a0;--ink-3:#6a6a6a;
+  --accent:#4d94ff;--accent-l:rgba(77,148,255,.1);
+  --brand:#ffe600;
+  --sh:0 2px 8px rgba(0,0,0,.5),0 1px 3px rgba(0,0,0,.4);
+  --sh-panel:0 4px 16px rgba(0,0,0,.5),0 2px 6px rgba(0,0,0,.35);
+  --green:#22c55e;--red:#ef4444;--amber:#fbbf24;--orange:#fb923c;
+  color-scheme:dark;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{display:flex;flex-direction:column;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+
+/* LOGIN */
+.login-overlay{position:fixed;inset:0;z-index:200;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-direction:column}
+.login-overlay.hidden{display:none}
+.login-box{background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--sh-panel);padding:36px 40px;width:380px;max-width:calc(100vw - 32px)}
+.login-logo{display:flex;align-items:center;gap:12px;margin-bottom:28px;justify-content:center}
+.login-logo svg{height:50px;width:50px;border-radius:4px;flex-shrink:0}
+.login-logo span{font-size:14px;font-weight:700;color:var(--ink);text-transform:uppercase;letter-spacing:.6px}
+.login-title{font-size:18px;font-weight:700;text-align:center;margin-bottom:6px;color:var(--ink)}
+.login-sub{font-size:13px;color:var(--ink-3);text-align:center;margin-bottom:22px}
+.login-field{margin-bottom:14px}
+.login-field label{font-size:11px;font-weight:600;color:var(--ink-2);text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:5px}
+.login-field input{width:100%;padding:10px 13px;border:1px solid var(--border);border-radius:8px;font-size:14px;background:var(--surface-2);color:var(--ink);outline:none;transition:.15s}
+.login-field input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+.login-btn{width:100%;padding:11px;border:none;border-radius:8px;background:var(--brand);color:#111;font-size:14px;font-weight:700;cursor:pointer;transition:.15s;margin-top:4px}
+.login-btn:hover{filter:brightness(.95)}
+.login-btn:disabled{opacity:.5;cursor:not-allowed}
+.login-err{color:var(--red);font-size:12px;text-align:center;margin-top:10px;min-height:16px}
+.login-footer{font-size:11px;color:var(--ink-3);text-align:center;margin-top:24px}
+
+/* TOPBAR */
+.topbar{flex-shrink:0;height:54px;background:var(--brand);display:flex;align-items:center;gap:0;padding:0 18px;box-shadow:0 2px 8px rgba(0,0,0,.15);z-index:10}
+:root[data-theme="dark"] .topbar{background:#1a1a18;border-bottom:1px solid var(--border);box-shadow:0 2px 10px rgba(0,0,0,.45)}
+.tb-logo{height:40px;width:40px;border-radius:3px;flex-shrink:0}
+.tb-title{font-size:15px;font-weight:700;color:#111;text-transform:uppercase;letter-spacing:.8px;margin-left:12px;flex-shrink:0}
+:root[data-theme="dark"] .tb-title{color:var(--ink)}
+
+/* NAV TABS */
+.tb-nav{display:flex;gap:2px;margin-left:24px;height:100%;align-items:stretch}
+.tb-tab{
+  display:flex;align-items:center;gap:6px;padding:0 16px;
+  border:none;background:transparent;cursor:pointer;
+  font-size:12px;font-weight:600;color:rgba(0,0,0,.55);
+  text-transform:uppercase;letter-spacing:.5px;
+  border-bottom:3px solid transparent;transition:.15s;
+  position:relative;top:1px;
+}
+.tb-tab:hover{color:rgba(0,0,0,.8);background:rgba(0,0,0,.04)}
+.tb-tab.active{color:#111;border-bottom-color:#111;background:rgba(0,0,0,.05)}
+:root[data-theme="dark"] .tb-tab{color:rgba(255,255,255,.45)}
+:root[data-theme="dark"] .tb-tab:hover{color:rgba(255,255,255,.7);background:rgba(255,255,255,.05)}
+:root[data-theme="dark"] .tb-tab.active{color:var(--ink);border-bottom-color:var(--brand);background:rgba(255,255,255,.06)}
+.tb-tab svg{width:15px;height:15px;flex-shrink:0}
+
+.tb-sep{flex:1}
+.tb-status{display:flex;align-items:center;gap:7px;font-size:12px;color:#333;margin-right:14px;flex-shrink:0}
+:root[data-theme="dark"] .tb-status{color:var(--ink-2)}
+.sdot{width:8px;height:8px;border-radius:50%;flex-shrink:0;transition:background .3s}
+.sdot.online{background:#1a9c1a}.sdot.offline{background:#d03b3b}
+.sdot.loading{background:#d4840a;animation:pulse 1s infinite}.sdot.cached{background:#2563eb}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.tb-btn{background:rgba(0,0,0,.1);border:none;border-radius:5px;padding:6px 12px;cursor:pointer;color:#111;font-size:12px;font-weight:600;display:flex;align-items:center;gap:5px;transition:.15s;flex-shrink:0;margin-left:6px}
+.tb-btn:hover{background:rgba(0,0,0,.18)}
+:root[data-theme="dark"] .tb-btn{background:rgba(255,255,255,.1);color:var(--ink)}
+:root[data-theme="dark"] .tb-btn:hover{background:rgba(255,255,255,.18)}
+.tb-clock{font-size:12px;font-weight:600;color:#111;margin-right:6px;flex-shrink:0}
+:root[data-theme="dark"] .tb-clock{color:var(--ink)}
+.tb-user{font-size:11px;color:rgba(0,0,0,.5);margin-right:8px;flex-shrink:0;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+:root[data-theme="dark"] .tb-user{color:var(--ink-3)}
+
+/* MAIN PAGES */
+.page{flex:1;min-height:0;display:none;flex-direction:column;overflow:hidden}
+.page.active{display:flex}
+
+/* == PAINEL PAGE == */
+.main{flex:1;min-height:0;display:flex;flex-direction:column;gap:9px;padding:10px 18px 10px;overflow:hidden}
+.kpi-bar{flex-shrink:0;display:flex;gap:6px;align-items:stretch}
+.kpi-group{display:flex;gap:5px;flex:1}
+.kpi-vsep{width:1px;background:var(--border);flex-shrink:0;margin:0 4px}
+.kpi{flex:1;min-width:0;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:9px 13px;border-left:3px solid transparent;box-shadow:var(--sh);display:flex;flex-direction:column;gap:2px;transition:box-shadow .15s}
+.kpi:hover{box-shadow:0 4px 14px rgba(0,0,0,.12)}
+.kn{font-size:10px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.4px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kv{font-size:24px;font-weight:700;line-height:1.1;color:var(--ink)}
+.ka-darkred{border-left-color:#991b1b}.kv-darkred{color:#991b1b}
+.ka-red{border-left-color:#dc2626}.kv-red{color:#dc2626}
+.ka-amber{border-left-color:#d97706}.kv-amber{color:#d97706}
+.ka-orange{border-left-color:#ea580c}.kv-orange{color:#ea580c}
+.ka-blue{border-left-color:#2563eb}.kv-blue{color:#2563eb}
+:root[data-theme="dark"] .kv{color:#fff!important}
+.ka-green{border-left-color:#16a34a}.kv-green{color:#16a34a}
+
+/* TABLES AREA */
+.tables{flex:1;min-height:0;display:flex;gap:10px}
+.panel{flex:1;min-height:0;min-width:0;display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;box-shadow:var(--sh-panel)}
+.ph{flex-shrink:0;padding:9px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--surface-2)}
+.ph-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--ink-2)}
+.ph-count{font-size:11px;color:var(--ink-3);font-weight:500}
+.pf{flex-shrink:0;padding:7px 14px;border-bottom:1px solid var(--border);display:flex;gap:7px;align-items:center}
+.pf select,.pf input{font-size:12px;padding:5px 9px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--ink);outline:none;transition:.15s}
+.pf select{min-width:110px}
+.pf input{flex:1;min-width:0}
+.pf select:focus,.pf input:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(37,99,235,.12)}
+.ps{flex:1;min-height:0;overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+thead th{background:var(--surface-2);padding:9px 12px;text-align:left;font-weight:600;font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.35px;position:sticky;top:0;z-index:1;border-bottom:1px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none}
+thead th:hover{color:var(--ink)}
+thead th .sa{margin-left:3px;opacity:.25;font-size:9px}
+thead th.sorted .sa{opacity:1;color:var(--accent)}
+tbody td{padding:9px 12px;border-bottom:1px solid var(--border);white-space:nowrap;vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:var(--surface-2)}
+.empty-cell{text-align:center;padding:40px;color:var(--ink-3);font-size:13px}
+
+/* BADGES */
+.b{display:inline-flex;align-items:center;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;letter-spacing:.2px;white-space:nowrap}
+.b-cd{background:#dc2626;color:#fff}
+.b-c{background:rgba(220,38,38,.1);color:#b91c1c}
+.b-a{background:rgba(217,119,6,.1);color:#92400e}
+.b-s{background:rgba(234,88,12,.1);color:#9a3412}
+.b-g{background:rgba(22,163,74,.1);color:#15803d}
+:root[data-theme="dark"] .b-cd{color:#fff;background:#b91c1c}
+:root[data-theme="dark"] .b-c{color:#fca5a5;background:rgba(220,38,38,.2)}
+:root[data-theme="dark"] .b-a{color:#fde68a;background:rgba(217,119,6,.2)}
+:root[data-theme="dark"] .b-s{color:#fed7aa;background:rgba(234,88,12,.2)}
+:root[data-theme="dark"] .b-g{color:#86efac;background:rgba(22,163,74,.2)}
+.placa-btn{background:none;border:none;cursor:pointer;padding:2px 6px;border-radius:4px;font-weight:700;letter-spacing:.3px;font-family:monospace;font-size:12px;color:var(--accent);text-decoration:underline;text-decoration-style:dotted;transition:.12s}
+.placa-btn:hover{background:var(--accent-l);text-decoration:none}
+.b-prostart{background:#003CB4;color:#fff}
+.b-scontrato{background:#374151;color:#fff}
+:root[data-theme="dark"] .b-prostart{background:#003CB4;color:#fff}
+:root[data-theme="dark"] .b-scontrato{background:#4b5563;color:#fff}
+
+/* Frota / Status badges */
+.b-crit{background:var(--red);color:#fff}
+.b-atr{background:var(--orange);color:#fff}
+.b-ant{background:var(--amber);color:#111}
+.b-dia{background:var(--green);color:#fff}
+.b-conc{background:var(--green);color:#fff}
+.b-canc{background:var(--ink-3);color:#fff}
+.b-pend{background:var(--accent);color:#fff}
+
+/* MODAL */
+.modal-backdrop{display:none;position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.45);backdrop-filter:blur(3px);align-items:center;justify-content:center}
+.modal-backdrop.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.25);width:560px;max-width:calc(100vw - 32px);max-height:calc(100vh - 64px);display:flex;flex-direction:column;overflow:hidden}
+.modal.wide{width:680px}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);background:var(--surface-2);flex-shrink:0}
+.modal-placa{font-family:monospace;font-size:20px;font-weight:800;letter-spacing:.5px;color:var(--ink)}
+.modal-sub{font-size:12px;color:var(--ink-3);margin-top:1px}
+.modal-close{background:var(--surface);border:1px solid var(--border);border-radius:6px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink-2);font-size:16px;line-height:1;transition:.12s}
+.modal-close:hover{background:var(--border);color:var(--ink)}
+.modal-body{padding:16px 18px;overflow-y:auto;flex:1}
+.modal-section{margin-bottom:14px}
+.modal-section-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--ink-3);margin-bottom:8px}
+.modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.modal-field{background:var(--surface-2);border:1px solid var(--border);border-radius:7px;padding:8px 11px}
+.modal-field.full{grid-column:1/-1}
+.mf-label{font-size:10px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.3px;font-weight:600;margin-bottom:2px}
+.mf-val{font-size:13px;font-weight:600;color:var(--ink)}
+.mf-val.mono{font-family:monospace}
+.mf-val.large{font-size:16px;font-weight:700}
+
+/* FORM MODAL */
+.form-group{margin-bottom:12px}
+.form-group label{display:block;font-size:11px;font-weight:600;color:var(--ink-2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}
+.form-group label .req{color:var(--red);margin-left:2px}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:7px;font-size:13px;background:var(--surface);color:var(--ink);outline:none;transition:.15s;font-family:inherit}
+.form-group textarea{resize:vertical;min-height:60px}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(37,99,235,.12)}
+.form-group input:read-only{background:var(--surface-2);color:var(--ink-2);cursor:not-allowed}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;padding:14px 18px;border-top:1px solid var(--border);flex-shrink:0;background:var(--surface-2)}
+.btn{padding:9px 18px;border:1px solid var(--border);border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;transition:.15s;display:inline-flex;align-items:center;gap:6px;background:var(--surface);color:var(--ink)}
+.btn:hover{background:var(--surface-2)}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn-primary:hover{filter:brightness(.9)}
+.btn-success{background:var(--green);color:#fff;border-color:var(--green)}
+.btn-success:hover{filter:brightness(.9)}
+.btn-danger{background:var(--red);color:#fff;border-color:var(--red)}
+.btn-danger:hover{filter:brightness(.9)}
+.btn-brand{background:var(--brand);color:#111;border-color:var(--brand)}
+.btn-brand:hover{filter:brightness(.93)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+/* AGENDAMENTOS / HISTORICO PAGES */
+.page-inner{flex:1;min-height:0;display:flex;flex-direction:column;padding:10px 18px 10px}
+.page-toolbar{flex-shrink:0;display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
+.page-toolbar .pf-input{padding:7px 12px;border:1px solid var(--border);border-radius:7px;font-size:13px;background:var(--surface);color:var(--ink);outline:none;min-width:200px;transition:.15s}
+.page-toolbar .pf-input:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(37,99,235,.12)}
+.page-toolbar select{padding:7px 12px;border:1px solid var(--border);border-radius:7px;font-size:13px;background:var(--surface);color:var(--ink);outline:none;min-width:130px}
+.page-table-wrap{flex:1;min-height:0;background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;box-shadow:var(--sh-panel);display:flex;flex-direction:column}
+.page-table-wrap .ps{flex:1;min-height:0;overflow:auto}
+.page-table-wrap .ph{flex-shrink:0}
+.toolbar-right{margin-left:auto;display:flex;gap:8px;align-items:center}
+
+/* action buttons inside table */
+.act-btn{background:none;border:1px solid var(--border);border-radius:5px;padding:4px 10px;cursor:pointer;font-size:11px;font-weight:600;color:var(--ink-2);transition:.12s;white-space:nowrap}
+.act-btn:hover{background:var(--surface-2);color:var(--ink)}
+.act-btn.green{border-color:var(--green);color:var(--green)}
+.act-btn.green:hover{background:rgba(22,163,74,.08)}
+.act-btn.red{border-color:var(--red);color:var(--red)}
+.act-btn.red:hover{background:rgba(220,38,38,.08)}
+
+/* STATUS BADGES agendamento - legacy */
+:root[data-theme="dark"] .b-pend{color:#93c5fd;background:rgba(37,99,235,.2)}
+:root[data-theme="dark"] .b-conc{color:#86efac;background:rgba(22,163,74,.2)}
+:root[data-theme="dark"] .b-canc{color:#d1d5db;background:rgba(107,114,128,.25)}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;right:20px;z-index:300;padding:12px 20px;border-radius:8px;font-size:13px;font-weight:600;color:#fff;box-shadow:0 4px 20px rgba(0,0,0,.25);transition:opacity .3s,transform .3s;opacity:0;transform:translateY(10px);pointer-events:none}
+.toast.show{opacity:1;transform:translateY(0);pointer-events:auto}
+.toast.success{background:#16a34a}
+.toast.error{background:#dc2626}
+.toast.info{background:#2563eb}
+</style>
+</head>
+<body>
+
+<!-- ===== LOGIN ===== -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-box">
+    <div class="login-logo">
+      <svg width="200" height="60" viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg">
+        <rect x="0" y="2" width="56" height="56" rx="8" fill="#111"/>
+        <path d="M8 10h40v28c0 6-6 12-20 16C14 50 8 44 8 38V10z" fill="#ffe600"/>
+        <path d="M18 28c1-4 5-7 9-7 3 0 4 1 5 3l3-4c-1 0-3-2-3-3s2-3 3-3l-4 2c-2-2-5-2-7 0-4 2-7 5-8 10l-1 5c0 3 1 4 3 4s3-2 3-4l-3-3z" fill="#111"/>
+        <text x="68" y="22" fill="var(--ink)" font-family="system-ui,-apple-system,sans-serif" font-size="11" font-weight="700" letter-spacing="1.5">GRUPO</text>
+        <text x="68" y="45" fill="var(--ink)" font-family="system-ui,-apple-system,sans-serif" font-size="22" font-weight="900" letter-spacing="0.5">MARONI</text>
+      </svg>
+    </div>
+    <div class="login-title">SGBD — Manutenção</div>
+    <div class="login-sub">Sistema de Gestão de Base de Dados</div>
+    <form onsubmit="doLogin(event)">
+      <div class="login-field">
+        <label>Usuário</label>
+        <input type="text" id="loginUser" placeholder="Digite seu usuário" autocomplete="username" required>
+      </div>
+      <div class="login-field">
+        <label>Senha</label>
+        <input type="password" id="loginPass" placeholder="Digite sua senha" autocomplete="current-password" required>
+      </div>
+      <button type="submit" class="login-btn" id="loginBtn">Entrar</button>
+      <div class="login-err" id="loginErr"></div>
+    </form>
+  </div>
+  <div class="login-footer">Planejamento e Controle de Manutenção &copy; Grupo Maroni</div>
+</div>
+
+<!-- ===== TOPBAR ===== -->
+<div class="topbar">
+  <svg class="tb-logo" width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+    <rect width="40" height="40" rx="6" fill="#ffe600"/>
+    <path d="M10 8h20v18c0 4-4 8-10 10-6-2-10-6-10-10V8z" fill="#111"/>
+    <path d="M15 18c1-3 4-5 7-5 2 0 3 1 4 2l2-3c-1 0-2-1-2-2s1-2 2-2l-3 1c-2-1-4-1-5 0-3 1-5 4-6 7l-1 4c0 2 1 3 2 3s2-1 2-3l-2-2z" fill="#ffe600"/>
+  </svg>
+  <span class="tb-title">Planejamento e Controle de Manutenção</span>
+
+  <nav class="tb-nav">
+    <button class="tb-tab active" data-page="painel" onclick="switchTab(this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      Painel
+    </button>
+    <button class="tb-tab" data-page="agendamentos" onclick="switchTab(this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+      Agendamentos
+    </button>
+    <button class="tb-tab" data-page="historico" onclick="switchTab(this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>
+      Histórico
+    </button>
+    <button class="tb-tab" data-page="frota" onclick="switchTab(this)" id="tabFrota" style="display:none">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 17h1l2-9h16l2 9h1M5 17a2 2 0 104 0M15 17a2 2 0 104 0"/></svg>
+      Gestão de Frota
+    </button>
+  </nav>
+
+  <div class="tb-sep"></div>
+  <div class="tb-status">
+    <div class="sdot loading" id="sDot"></div>
+    <span id="sTxt">Carregando...</span>
+  </div>
+  <span class="tb-user" id="tbUser"></span>
+  <span class="tb-clock" id="clock"></span>
+  <button class="tb-btn" onclick="exportCSV()" title="Exportar CSV">
+    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 7l4 4 4-4M6 11V1M1 12h10"/></svg>
+    CSV
+  </button>
+  <button class="tb-btn" onclick="toggleTheme()" title="Alternar tema">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+  </button>
+  <button class="tb-btn" onclick="doLogout()" title="Sair">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+  </button>
+</div>
+
+<!-- ===== PAGE: PAINEL ===== -->
+<div class="page active" id="page-painel">
+<div class="main">
+  <div class="kpi-bar">
+    <div class="kpi-group">
+      <div class="kpi ka-darkred"><div class="kn">Crítico</div><div class="kv kv-darkred" id="kv-crit">—</div></div>
+      <div class="kpi ka-red"><div class="kn">Em Atraso</div><div class="kv kv-red" id="kv-atr">—</div></div>
+      <div class="kpi ka-amber"><div class="kn">Antecipação Rev.</div><div class="kv kv-amber" id="kv-ant">—</div></div>
+    </div>
+    <div class="kpi-vsep"></div>
+    <div class="kpi-group">
+      <div class="kpi ka-red"><div class="kn">Tacógrafos Vencidos</div><div class="kv kv-red" id="kv-tvenc">—</div></div>
+      <div class="kpi ka-orange"><div class="kn">Vence Hoje</div><div class="kv kv-orange" id="kv-thoje">—</div></div>
+      <div class="kpi ka-blue"><div class="kn">A Vencer (≤30d)</div><div class="kv kv-blue" id="kv-tant">—</div></div>
+    </div>
+  </div>
+  <div class="tables">
+    <div class="panel">
+      <div class="ph"><span class="ph-title">Revisões</span><span class="ph-count" id="rev-count">—</span></div>
+      <div class="pf">
+        <select id="rSel" onchange="rFilter.status=this.value;renderRev()">
+          <option value="">Todos os status</option>
+          <option value="CRÍTICO">Crítico</option>
+          <option value="EM ATRASO">Em Atraso</option>
+          <option value="ANTECIPAÇÃO">Antecipação</option>
+        </select>
+        <input type="text" id="rQ" placeholder="Buscar placa, modelo..." oninput="rFilter.q=this.value;renderRev()">
+      </div>
+      <div class="ps">
+        <table><thead><tr>
+          <th data-t="r" data-c="status" class="sorted">Status <span class="sa">&#9650;</span></th>
+          <th data-t="r" data-c="placa">Placa <span class="sa">&#9650;</span></th>
+          <th data-t="r" data-c="marca">Marca <span class="sa">&#9650;</span></th>
+          <th data-t="r" data-c="modelo">Modelo <span class="sa">&#9650;</span></th>
+          <th data-t="r" data-c="operacao">Operação <span class="sa">&#9650;</span></th>
+          <th data-t="r" data-c="kmAtual">KM Atual <span class="sa">&#9650;</span></th>
+          <th data-t="r" data-c="kmProxRevisao">KM Próx. <span class="sa">&#9650;</span></th>
+          <th data-t="r" data-c="kmAtraso">Atraso/Vencer <span class="sa">&#9650;</span></th>
+          <th data-t="r" data-c="tipoRevisao">Tipo Rev. <span class="sa">&#9650;</span></th>
+          <th data-t="r" data-c="tipoContrato">Contrato <span class="sa">&#9650;</span></th>
+          <th data-t="r" data-c="dataUltRevisao">Últ. Rev. <span class="sa">&#9650;</span></th>
+        </tr></thead><tbody id="tb-rev"></tbody></table>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="ph"><span class="ph-title">Tacógrafos</span><span class="ph-count" id="tac-count">—</span></div>
+      <div class="pf">
+        <select id="tSel" onchange="tFilter.status=this.value;renderTac()">
+          <option value="">Todos os status</option>
+          <option value="VENCIDO">Vencido</option>
+          <option value="VENCE HOJE">Vence Hoje</option>
+          <option value="ANTECIPAÇÃO">Antecipação</option>
+        </select>
+        <input type="text" id="tQ" placeholder="Buscar placa, modelo..." oninput="tFilter.q=this.value;renderTac()">
+      </div>
+      <div class="ps">
+        <table><thead><tr>
+          <th data-t="t" data-c="status" class="sorted">Status <span class="sa">&#9650;</span></th>
+          <th data-t="t" data-c="placa">Placa <span class="sa">&#9650;</span></th>
+          <th data-t="t" data-c="marca">Marca <span class="sa">&#9650;</span></th>
+          <th data-t="t" data-c="modelo">Modelo <span class="sa">&#9650;</span></th>
+          <th data-t="t" data-c="operacao">Operação <span class="sa">&#9650;</span></th>
+          <th data-t="t" data-c="dataEmissao">Dt. Emissão <span class="sa">&#9650;</span></th>
+          <th data-t="t" data-c="dataVencimento">Dt. Vencimento <span class="sa">&#9650;</span></th>
+          <th data-t="t" data-c="prazo">Prazo (dias) <span class="sa">&#9650;</span></th>
+        </tr></thead><tbody id="tb-tac"></tbody></table>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ===== PAGE: AGENDAMENTOS ===== -->
+<div class="page" id="page-agendamentos">
+<div class="page-inner">
+  <div class="page-toolbar">
+    <button class="btn btn-primary" onclick="openAgendForm()">+ Novo Agendamento</button>
+    <select id="agStatusFilter" onchange="renderAgend()">
+      <option value="">Todos os status</option>
+      <option value="Pendente">Pendente</option>
+      <option value="Concluído">Concluído</option>
+      <option value="Cancelado">Cancelado</option>
+    </select>
+    <input class="pf-input" id="agSearch" placeholder="Buscar placa, modelo..." oninput="renderAgend()">
+    <div class="toolbar-right">
+      <span class="ph-count" id="ag-count">—</span>
+    </div>
+  </div>
+  <div class="page-table-wrap">
+    <div class="ps">
+      <table><thead><tr>
+        <th>Status</th>
+        <th>Cód.</th>
+        <th>Placa</th>
+        <th>Modelo</th>
+        <th>Tração</th>
+        <th>Tipo Serviço</th>
+        <th>Data Agendamento</th>
+        <th>Local</th>
+        <th>Ações</th>
+      </tr></thead><tbody id="tb-agend"></tbody></table>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ===== PAGE: HISTÓRICO ===== -->
+<div class="page" id="page-historico">
+<div class="page-inner">
+  <div class="page-toolbar">
+    <input class="pf-input" id="histSearch" placeholder="Buscar placa, modelo, tipo de serviço..." oninput="renderHist()">
+    <select id="histStatusFilter" onchange="renderHist()">
+      <option value="">Todos</option>
+      <option value="Concluído">Concluído</option>
+      <option value="Em andamento">Em andamento</option>
+    </select>
+    <div class="toolbar-right">
+      <button class="btn btn-brand" onclick="atualizarBase()" id="btnAtualizarBase" title="Atualizar KM e data na planilha Excel Base de Revisões 3.0.1">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2v6h-6M3 12a9 9 0 0115.26-6.49L21 8M3 22v-6h6M21 12a9 9 0 01-15.26 6.49L3 16"/></svg>
+        Atualizar Base Excel
+      </button>
+      <span class="ph-count" id="hist-count">—</span>
+    </div>
+  </div>
+  <div class="page-table-wrap">
+    <div class="ps">
+      <table><thead><tr>
+        <th>Status</th>
+        <th>Placa</th>
+        <th>Modelo</th>
+        <th>Tração</th>
+        <th>Tipo Serviço</th>
+        <th>Local</th>
+        <th>KM</th>
+        <th>Entrada</th>
+        <th>Término</th>
+        <th>Contrato</th>
+        <th>O.S.</th>
+      </tr></thead><tbody id="tb-hist"></tbody></table>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ===== PAGE: GESTÃO DE FROTA (ADMIN ONLY) ===== -->
+<div class="page" id="page-frota">
+<div class="page-inner">
+  <div class="page-toolbar">
+    <button class="btn btn-brand" onclick="openVeicForm(null)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+      Adicionar Veículo
+    </button>
+    <input class="pf-input" id="frotaSearch" placeholder="Buscar placa, modelo, marca, operação..." oninput="renderFrota()">
+    <div class="toolbar-right">
+      <span class="ph-count" id="frota-count">—</span>
+    </div>
+  </div>
+  <div class="page-table-wrap">
+    <div class="ps">
+      <table><thead><tr>
+        <th>Placa</th>
+        <th>Marca</th>
+        <th>Modelo</th>
+        <th>Operação</th>
+        <th>KM Atual</th>
+        <th>Ano</th>
+        <th>Chassi</th>
+        <th>Tipo Contrato</th>
+        <th>KM Ativação</th>
+        <th>Intervalo Manut.</th>
+        <th>Status Manut.</th>
+        <th>KM Últ. Revisão</th>
+        <th>KM Próx. Revisão</th>
+        <th>Tipo Manutenção</th>
+        <th>KM Atraso/A Vencer</th>
+        <th>Ações</th>
+      </tr></thead><tbody id="tb-frota"></tbody></table>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ===== MODAL: DETALHES VEÍCULO ===== -->
+<div class="modal-backdrop" id="modalBackdrop" onclick="closeModal(event)">
+  <div class="modal" id="modalBox">
+    <div class="modal-head">
+      <div><div class="modal-placa" id="mPlaca">—</div><div class="modal-sub" id="mSub"></div></div>
+      <button class="modal-close" onclick="closeModal(null)" title="Fechar">&#10005;</button>
+    </div>
+    <div class="modal-body" id="mBody"></div>
+  </div>
+</div>
+
+<!-- ===== MODAL: FORM AGENDAMENTO ===== -->
+<div class="modal-backdrop" id="agendFormBackdrop" onclick="closeAgendForm(event)">
+  <div class="modal wide">
+    <div class="modal-head">
+      <div><div class="modal-placa" id="agFormTitle">Novo Agendamento</div><div class="modal-sub">Preencha os dados do agendamento</div></div>
+      <button class="modal-close" onclick="closeAgendForm(null)">&#10005;</button>
+    </div>
+    <div class="modal-body">
+      <form id="agendFormEl" onsubmit="saveAgend(event)">
+        <input type="hidden" id="af_id">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Código Agendamento <span class="req">*</span></label>
+            <input type="number" id="af_codigo" required>
+          </div>
+          <div class="form-group">
+            <label>Data de Agendamento <span class="req">*</span></label>
+            <input type="datetime-local" id="af_data" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Placa <span class="req">*</span></label>
+            <input type="text" id="af_placa" required placeholder="ABC1D23" maxlength="8" list="placasList" style="text-transform:uppercase;font-family:monospace;font-weight:700" oninput="onPlacaInput()">
+            <datalist id="placasList"></datalist>
+          </div>
+          <div class="form-group">
+            <label>Modelo</label>
+            <input type="text" id="af_modelo" placeholder="Ex: FH 540">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Tração</label>
+            <input type="text" id="af_tracao" placeholder="Ex: 6x4">
+          </div>
+          <div class="form-group">
+            <label>Tipo de Serviço <span class="req">*</span></label>
+            <select id="af_tipoServico" required>
+              <option value="">Selecione...</option>
+              <option value="REVISÃO DE CAMINHÕES">REVISÃO DE CAMINHÕES</option>
+              <option value="REVISÃO DE TACÓGRAFO">REVISÃO DE TACÓGRAFO</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Local de Agendamento</label>
+          <input type="text" id="af_local" placeholder="Ex: CWS Scania Guarulhos">
+        </div>
+      </form>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeAgendForm(null)">Cancelar</button>
+      <button class="btn btn-primary" onclick="document.getElementById('agendFormEl').requestSubmit()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: CONCLUIR AGENDAMENTO → REGISTRAR SERVIÇO ===== -->
+<div class="modal-backdrop" id="concluirFormBackdrop" onclick="closeConcluir(event)">
+  <div class="modal wide">
+    <div class="modal-head">
+      <div><div class="modal-placa" id="cfTitle">Concluir Agendamento</div><div class="modal-sub">Registrar serviço realizado e gerar histórico</div></div>
+      <button class="modal-close" onclick="closeConcluir(null)">&#10005;</button>
+    </div>
+    <div class="modal-body">
+      <form id="concluirFormEl" onsubmit="saveConcluir(event)">
+        <input type="hidden" id="cf_agendId">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Placa</label>
+            <input type="text" id="cf_placa" readonly>
+          </div>
+          <div class="form-group">
+            <label>Modelo</label>
+            <input type="text" id="cf_modelo" readonly>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Tração / Tipo</label>
+            <input type="text" id="cf_tipo" readonly>
+          </div>
+          <div class="form-group">
+            <label>KM <span class="req">*</span></label>
+            <input type="text" id="cf_km" required placeholder="Ex: 350000">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Data/Hora Entrada <span class="req">*</span></label>
+            <input type="datetime-local" id="cf_entrada" required>
+          </div>
+          <div class="form-group">
+            <label>Data/Hora Término</label>
+            <input type="datetime-local" id="cf_termino">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Tipo de Serviço <span class="req">*</span></label>
+            <input type="text" id="cf_tipoServico" required placeholder="Ex: Preventiva, Corretiva">
+          </div>
+          <div class="form-group">
+            <label>Local de Serviço <span class="req">*</span></label>
+            <select id="cf_localServico" required>
+              <option value="">Selecione...</option>
+              <option value="CWS SCANIA">CWS SCANIA</option>
+              <option value="EXTERNA">EXTERNA</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Local Realizado</label>
+            <input type="text" id="cf_localRealizado" placeholder="Ex: Guarulhos - SP">
+          </div>
+          <div class="form-group">
+            <label>Contrato de Manutenção</label>
+            <input type="text" id="cf_contrato" placeholder="Ex: PRO START">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Ordem de Serviço</label>
+          <input type="text" id="cf_os" placeholder="Nº da O.S.">
+        </div>
+      </form>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeConcluir(null)">Cancelar</button>
+      <button class="btn btn-success" onclick="document.getElementById('concluirFormEl').requestSubmit()">Concluir e Registrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: FORM VEÍCULO ===== -->
+<div class="modal-backdrop" id="veicFormBackdrop" onclick="closeVeicForm(event)">
+  <div class="modal wide">
+    <div class="modal-head">
+      <div><div class="modal-placa" id="veicFormTitle">Novo Veículo</div><div class="modal-sub">Campos de manutenção e identificação</div></div>
+      <button class="modal-close" onclick="closeVeicForm(null)">&#10005;</button>
+    </div>
+    <div class="modal-body">
+      <form id="veicFormEl" onsubmit="saveVeic(event)">
+        <input type="hidden" id="vf_id">
+        <div class="form-row">
+          <div class="form-group"><label>Placa <span class="req">*</span></label><input type="text" id="vf_placa" required style="text-transform:uppercase;font-family:monospace;font-weight:700" maxlength="8"></div>
+          <div class="form-group"><label>Marca</label><input type="text" id="vf_marca"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Modelo</label><input type="text" id="vf_modelo"></div>
+          <div class="form-group"><label>Operação</label><input type="text" id="vf_operacao"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>KM Atual</label><input type="number" id="vf_km"></div>
+          <div class="form-group"><label>Ano</label><input type="text" id="vf_ano"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Chassi</label><input type="text" id="vf_chassi" style="font-family:monospace;font-size:12px"></div>
+          <div class="form-group"><label>Tipo de Contrato</label>
+            <select id="vf_tipoContrato"><option value="">Selecione...</option><option value="PRO START">PRO START</option><option value="S.CONTRATO">S.CONTRATO</option></select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>KM Ativação</label><input type="number" id="vf_kmAtivacao"></div>
+          <div class="form-group"><label>Intervalo de Manutenção</label><input type="number" id="vf_intervalo"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>KM Última Revisão</label><input type="number" id="vf_kmUltRevisao"></div>
+          <div class="form-group"><label>Tração / Tipo</label><input type="text" id="vf_tipo" placeholder="Ex: 6x4"></div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeVeicForm(null)">Cancelar</button>
+      <button class="btn btn-primary" onclick="document.getElementById('veicFormEl').requestSubmit()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ==================================================================
+   CONFIG
+   ================================================================== */
+var BASE_URL='https://n8n.srv1162985.hstgr.cloud/webhook';
+var WEBHOOK_URL=BASE_URL+'/painel-revisoes-data';
+var API_AUTH=BASE_URL+'/sgbd-auth';
+var API_AGEND=BASE_URL+'/sgbd-agendamentos';
+var API_REV=BASE_URL+'/sgbd-revisoes';
+var API_UPDATE_BASE=BASE_URL+'/sgbd-atualizar-base';
+var API_FROTA=BASE_URL+'/sgbd-frota';
+var API_VEICULOS=BASE_URL+'/sgbd-veiculos';
+
+var CACHE_KEY='painel_maroni_v2';
+var REFRESH_MS=5*60*1000;
+var TOKEN_KEY='sgbd_token';
+var USER_KEY='sgbd_user';
+
+/* ==================================================================
+   STATE
+   ================================================================== */
+var R=[],T=[];
+var rFilter={status:'',q:''};
+var tFilter={status:'',q:''};
+var rSort={col:'status',dir:1};
+var tSort={col:'status',dir:1};
+var RPRI={'CRÍTICO':0,'EM ATRASO':1,'ANTECIPAÇÃO':2};
+var TPRI={'VENCIDO':0,'VENCE HOJE':1,'ANTECIPAÇÃO':2};
+var _rRows=[],_tRows=[];
+
+var AG=[]; // agendamentos
+var HI=[]; // historico (revisoes realizadas)
+var FROTA=[]; // frota completa (admin)
+var currentUser=null;
+
+// Client-side exclude filter
+function normOp(s){
+  return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^\x20-\x7E]/g,'').toUpperCase().trim();
+}
+function isExcludedOp(op){
+  var n=normOp(op);
+  if(!n)return false;
+  if(n.startsWith('LOCA'))return true;
+  if(n.startsWith('MANUTEN'))return true;
+  if(n.startsWith('NOVO - CONCESS'))return true;
+  if(n.startsWith('EM PREPAR'))return true;
+  return['VENDIDO','MANOBRA','SINISTRO'].indexOf(n)>=0;
+}
+
+/* ==================================================================
+   AUTH
+   ================================================================== */
+function getToken(){try{return localStorage.getItem(TOKEN_KEY)||'';}catch(e){return '';}}
+function getUser(){try{return localStorage.getItem(USER_KEY)||'';}catch(e){return '';}}
+function authHeaders(){return{'Authorization':'Bearer '+getToken(),'Content-Type':'application/json'};}
+
+function checkAuth(){
+  var t=getToken();
+  if(!t){showLogin();return;}
+  // verify token
+  fetch(API_AUTH+'?action=verify',{headers:authHeaders()})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d.valid){currentUser=d.user;hideLogin();boot();}
+      else{showLogin();}
+    })
+    .catch(function(){
+      // offline - allow cached if token exists
+      currentUser=getUser();
+      if(currentUser){hideLogin();boot();}
+      else showLogin();
+    });
+}
+
+function doLogin(e){
+  e.preventDefault();
+  var u=document.getElementById('loginUser').value.trim();
+  var p=document.getElementById('loginPass').value;
+  var btn=document.getElementById('loginBtn');
+  var err=document.getElementById('loginErr');
+  btn.disabled=true;err.textContent='';
+  fetch(API_AUTH,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'login',user:u,pass:p})
+  })
+  .then(function(r){return r.json();})
+  .then(function(d){
+    btn.disabled=false;
+    if(d.token){
+      try{localStorage.setItem(TOKEN_KEY,d.token);localStorage.setItem(USER_KEY,d.user);}catch(e){}
+      currentUser=d.user;
+      hideLogin();
+      boot();
+    }else{
+      err.textContent=d.error||'Usuário ou senha inválidos';
+    }
+  })
+  .catch(function(){btn.disabled=false;err.textContent='Erro de conexão. Tente novamente.';});
+}
+
+function doLogout(){
+  try{localStorage.removeItem(TOKEN_KEY);localStorage.removeItem(USER_KEY);}catch(e){}
+  currentUser=null;
+  document.getElementById('tabFrota').style.display='none';
+  showLogin();
+}
+
+function showLogin(){document.getElementById('loginOverlay').classList.remove('hidden');}
+function hideLogin(){
+  document.getElementById('loginOverlay').classList.add('hidden');
+  document.getElementById('tbUser').textContent=currentUser||'';
+  // Show admin-only tabs
+  if(currentUser==='Administrador'){
+    document.getElementById('tabFrota').style.display='';
+  }else{
+    document.getElementById('tabFrota').style.display='none';
+  }
+}
+
+/* ==================================================================
+   BOOT
+   ================================================================== */
+var booted=false;
+function boot(){
+  if(booted)return;booted=true;
+  try{var t=localStorage.getItem('theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}
+  updateClock();setInterval(updateClock,15000);
+  var cache=tryLoadCache();
+  if(cache){R=cache.revisoes||[];T=cache.tacografos||[];renderPainel();setStatus('cached','Cache local · '+fmtTS(cache.atualizado));updatePlacasList();}
+  fetchPainelData();setInterval(fetchPainelData,REFRESH_MS);
+  wireSortHeaders();
+  fetchAgend();
+  fetchHist();
+  if(currentUser==='Administrador') fetchFrota();
+}
+
+/* ==================================================================
+   TABS
+   ================================================================== */
+function switchTab(el){
+  document.querySelectorAll('.tb-tab').forEach(function(t){t.classList.remove('active');});
+  el.classList.add('active');
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
+  document.getElementById('page-'+el.dataset.page).classList.add('active');
+}
+
+/* ==================================================================
+   PAINEL DATA (existing)
+   ================================================================== */
+function fetchPainelData(){
+  setStatus('loading','Atualizando...');
+  fetch(WEBHOOK_URL).then(function(r){if(!r.ok)throw new Error(r.status);return r.json();})
+  .then(function(d){
+    if(Array.isArray(d.revisoes))R=d.revisoes;
+    if(Array.isArray(d.tacografos))T=d.tacografos;
+    saveCache(d);renderPainel();
+    updatePlacasList();
+    setStatus('online','Atualizado · '+fmtTS(d.atualizado||new Date().toISOString()));
+  }).catch(function(){
+    setStatus('offline',(R.length||T.length)?'Sem conexão · último cache':'Sem conexão · sem dados');
+  });
+}
+
+function renderPainel(){renderKPIs();renderRev();renderTac();}
+
+function renderKPIs(){
+  var crit=R.filter(function(r){return!isExcludedOp(r.operacao)&&r.status==='CRÍTICO';}).length;
+  var atr=R.filter(function(r){return!isExcludedOp(r.operacao)&&r.status==='EM ATRASO';}).length;
+  var ant=R.filter(function(r){return!isExcludedOp(r.operacao)&&r.status==='ANTECIPAÇÃO';}).length;
+  var tvenc=T.filter(function(t){return!isExcludedOp(t.operacao)&&t.status==='VENCIDO';}).length;
+  var thoje=T.filter(function(t){return!isExcludedOp(t.operacao)&&t.status==='VENCE HOJE';}).length;
+  var tant=T.filter(function(t){return!isExcludedOp(t.operacao)&&t.status==='ANTECIPAÇÃO';}).length;
+  document.getElementById('kv-crit').textContent=crit;
+  document.getElementById('kv-atr').textContent=atr;
+  document.getElementById('kv-ant').textContent=ant;
+  document.getElementById('kv-tvenc').textContent=tvenc;
+  document.getElementById('kv-thoje').textContent=thoje;
+  document.getElementById('kv-tant').textContent=tant;
+}
+
+function applySort(arr,sort,priMap){
+  return arr.slice().sort(function(a,b){
+    var av=a[sort.col]||'',bv=b[sort.col]||'';
+    if(sort.col==='status'&&priMap){var ap=priMap[av]!=null?priMap[av]:99;var bp=priMap[bv]!=null?priMap[bv]:99;return(ap-bp)*sort.dir;}
+    var an=parseFloat(av),bn=parseFloat(bv);
+    if(!isNaN(an)&&!isNaN(bn))return(an-bn)*sort.dir;
+    return String(av).localeCompare(String(bv),'pt-BR')*sort.dir;
+  });
+}
+
+function filterRev(){
+  var s=rFilter.status.toUpperCase(),q=rFilter.q.toLowerCase();
+  return applySort(R.filter(function(r){
+    if(isExcludedOp(r.operacao))return false;
+    if(s&&r.status!==s)return false;
+    if(q&&!(r.placa||'').toLowerCase().includes(q)&&!(r.modelo||'').toLowerCase().includes(q)&&!(r.operacao||'').toLowerCase().includes(q)&&!(r.marca||'').toLowerCase().includes(q))return false;
+    return true;
+  }),rSort,RPRI);
+}
+
+function filterTac(){
+  var s=tFilter.status.toUpperCase(),q=tFilter.q.toLowerCase();
+  return applySort(T.filter(function(t){
+    if(isExcludedOp(t.operacao))return false;
+    if(s&&t.status!==s)return false;
+    if(q&&!(t.placa||'').toLowerCase().includes(q)&&!(t.modelo||'').toLowerCase().includes(q)&&!(t.operacao||'').toLowerCase().includes(q)&&!(t.marca||'').toLowerCase().includes(q))return false;
+    return true;
+  }),tSort,TPRI);
+}
+
+function renderRev(){
+  var rows=filterRev();_rRows=rows;
+  var tb=document.getElementById('tb-rev');
+  document.getElementById('rev-count').textContent=rows.length+' '+plural(rows.length,'item','itens');
+  if(!rows.length){tb.innerHTML='<tr><td colspan="11" class="empty-cell">Nenhum item encontrado</td></tr>';return;}
+  tb.innerHTML=rows.map(function(r,idx){
+    var cls=r.status==='CRÍTICO'?'b-cd':r.status==='EM ATRASO'?'b-c':'b-a';
+    var km=parseFloat(r.kmAtraso||0);var kmStr=isNaN(km)?'—':(km>0?'+':'')+km.toLocaleString('pt-BR')+' km';
+    return '<tr><td><span class="b '+cls+'">'+esc(r.status)+'</span></td>'+
+      '<td><button class="placa-btn" onclick="showModal(\'r\','+idx+')">'+esc(r.placa)+'</button></td>'+
+      '<td>'+esc(r.marca)+'</td><td>'+esc(r.modelo)+'</td><td>'+esc(r.operacao)+'</td>'+
+      '<td>'+fmtKm(r.kmAtual)+'</td><td>'+fmtKm(r.kmProxRevisao)+'</td>'+
+      '<td style="font-weight:600">'+kmStr+'</td><td>'+esc(r.tipoRevisao)+'</td>'+
+      '<td>'+fmtContrato(r.tipoContrato)+'</td><td>'+esc(r.dataUltRevisao)+'</td></tr>';
+  }).join('');
+}
+
+function renderTac(){
+  var rows=filterTac();_tRows=rows;
+  var tb=document.getElementById('tb-tac');
+  document.getElementById('tac-count').textContent=rows.length+' '+plural(rows.length,'item','itens');
+  if(!rows.length){tb.innerHTML='<tr><td colspan="8" class="empty-cell">Nenhum item encontrado</td></tr>';return;}
+  tb.innerHTML=rows.map(function(t,idx){
+    var cls=t.status==='VENCIDO'?'b-c':t.status==='VENCE HOJE'?'b-s':'b-a';
+    var prazo=parseFloat(t.prazo);var prazoStr=isNaN(prazo)?'—':(prazo<0?prazo+' dias':(prazo===0?'Hoje':prazo+' dias'));
+    return '<tr><td><span class="b '+cls+'">'+esc(t.status)+'</span></td>'+
+      '<td><button class="placa-btn" onclick="showModal(\'t\','+idx+')">'+esc(t.placa)+'</button></td>'+
+      '<td>'+esc(t.marca)+'</td><td>'+esc(t.modelo)+'</td><td>'+esc(t.operacao)+'</td>'+
+      '<td>'+esc(t.dataEmissao)+'</td><td style="font-weight:600">'+esc(t.dataVencimento)+'</td>'+
+      '<td style="font-weight:600">'+prazoStr+'</td></tr>';
+  }).join('');
+}
+
+function wireSortHeaders(){
+  document.querySelectorAll('thead th[data-c]').forEach(function(th){
+    th.addEventListener('click',function(){
+      var t=th.dataset.t,c=th.dataset.c;
+      if(t==='r'){if(rSort.col===c)rSort.dir*=-1;else{rSort.col=c;rSort.dir=1;}
+        document.querySelectorAll('thead th[data-t="r"]').forEach(function(h){h.classList.toggle('sorted',h.dataset.c===c);});renderRev();
+      }else{if(tSort.col===c)tSort.dir*=-1;else{tSort.col=c;tSort.dir=1;}
+        document.querySelectorAll('thead th[data-t="t"]').forEach(function(h){h.classList.toggle('sorted',h.dataset.c===c);});renderTac();
+      }
+    });
+  });
+}
+
+/* ==================================================================
+   PLATE AUTOCOMPLETE FROM BASE
+   ================================================================== */
+function updatePlacasList(){
+  var dl=document.getElementById('placasList');
+  var seen={};
+  dl.innerHTML='';
+  R.forEach(function(v){
+    var p=(v.placa||'').toUpperCase();
+    if(p&&!seen[p]){seen[p]=1;var o=document.createElement('option');o.value=p;o.textContent=p+' — '+(v.modelo||'');dl.appendChild(o);}
+  });
+}
+
+function onPlacaInput(){
+  var val=(document.getElementById('af_placa').value||'').toUpperCase().trim();
+  if(!val)return;
+  for(var i=0;i<R.length;i++){
+    if((R[i].placa||'').toUpperCase()===val){
+      document.getElementById('af_modelo').value=R[i].modelo||'';
+      document.getElementById('af_tracao').value=R[i].tipo||R[i].tracao||'';
+      return;
+    }
+  }
+}
+
+function placaExistsInBase(placa){
+  var p=(placa||'').toUpperCase().trim();
+  if(!p)return false;
+  for(var i=0;i<R.length;i++){
+    if((R[i].placa||'').toUpperCase()===p)return true;
+  }
+  return true; // allow if base is empty (no data yet)
+}
+
+/* ==================================================================
+   AGENDAMENTOS
+   ================================================================== */
+function fetchAgend(){
+  fetch(API_AGEND,{headers:authHeaders()})
+  .then(function(r){return r.json();})
+  .then(function(d){if(Array.isArray(d.items))AG=d.items;renderAgend();})
+  .catch(function(){});
+}
+
+function renderAgend(){
+  var q=(document.getElementById('agSearch').value||'').toLowerCase();
+  var sf=document.getElementById('agStatusFilter').value;
+  var rows=AG.filter(function(a){
+    if(sf&&(a.status||'Pendente')!==sf)return false;
+    if(q&&!(a.placa||'').toLowerCase().includes(q)&&!(a.modelo||'').toLowerCase().includes(q))return false;
+    return true;
+  });
+  var tb=document.getElementById('tb-agend');
+  document.getElementById('ag-count').textContent=rows.length+' '+plural(rows.length,'item','itens');
+  if(!rows.length){tb.innerHTML='<tr><td colspan="9" class="empty-cell">Nenhum agendamento encontrado</td></tr>';return;}
+  tb.innerHTML=rows.map(function(a,i){
+    var st=a.status||'Pendente';
+    var cls=st==='Concluído'?'b-conc':st==='Cancelado'?'b-canc':'b-pend';
+    var acts='';
+    if(st==='Pendente'){
+      acts='<button class="act-btn green" onclick="openConcluir('+i+')">Concluir</button> '+
+           '<button class="act-btn" onclick="editAgend('+i+')">Editar</button> '+
+           '<button class="act-btn red" onclick="deleteAgend('+i+')">Excluir</button>';
+    }
+    return '<tr><td><span class="b '+cls+'">'+esc(st)+'</span></td>'+
+      '<td style="font-weight:700;font-family:monospace">'+esc(a.codigo)+'</td>'+
+      '<td><button class="placa-btn" onclick="showModal(\'a\','+i+')">'+esc(a.placa)+'</button></td>'+
+      '<td>'+esc(a.modelo)+'</td><td>'+esc(a.tracao)+'</td>'+
+      '<td>'+esc(a.tipoServico||a.TipoDeServico||'')+'</td>'+
+      '<td>'+fmtDateTime(a.dataAgendamento)+'</td><td>'+esc(a.local)+'</td>'+
+      '<td>'+acts+'</td></tr>';
+  }).join('');
+}
+
+function openAgendForm(data){
+  document.getElementById('af_id').value=data?data.id:'';
+  document.getElementById('af_codigo').value=data?data.codigo:'';
+  document.getElementById('af_data').value=data?toLocalDT(data.dataAgendamento):'';
+  document.getElementById('af_placa').value=data?data.placa:'';
+  document.getElementById('af_modelo').value=data?data.modelo:'';
+  document.getElementById('af_tracao').value=data?data.tracao:'';
+  document.getElementById('af_tipoServico').value=data?(data.tipoServico||data.TipoDeServico||''):'';
+  document.getElementById('af_local').value=data?data.local:'';
+  document.getElementById('agFormTitle').textContent=data?'Editar Agendamento':'Novo Agendamento';
+  document.getElementById('agendFormBackdrop').classList.add('open');
+}
+function closeAgendForm(e){if(e&&e.target!==document.getElementById('agendFormBackdrop'))return;document.getElementById('agendFormBackdrop').classList.remove('open');}
+
+function saveAgend(e){
+  e.preventDefault();
+  var placa=document.getElementById('af_placa').value.toUpperCase();
+  // Validate plate exists in base
+  if(R.length>0&&!placaExistsInBase(placa)){
+    toast('Placa não encontrada na base de veículos','error');
+    return;
+  }
+  var id=document.getElementById('af_id').value;
+  var payload={
+    action:id?'update':'create',
+    id:id||undefined,
+    codigo:document.getElementById('af_codigo').value,
+    placa:placa,
+    modelo:document.getElementById('af_modelo').value,
+    tracao:document.getElementById('af_tracao').value,
+    tipoServico:document.getElementById('af_tipoServico').value,
+    TipoDeServico:document.getElementById('af_tipoServico').value,
+    dataAgendamento:document.getElementById('af_data').value,
+    local:document.getElementById('af_local').value
+  };
+  fetch(API_AGEND,{method:'POST',headers:authHeaders(),body:JSON.stringify(payload)})
+  .then(function(r){return r.json();})
+  .then(function(d){
+    if(d.success){toast('Agendamento salvo com sucesso!','success');closeAgendForm(null);fetchAgend();}
+    else toast(d.error||'Erro ao salvar','error');
+  }).catch(function(){toast('Erro de conexão','error');});
+}
+
+function editAgend(i){openAgendForm(AG[i]);}
+
+function deleteAgend(i){
+  if(!confirm('Excluir agendamento de '+AG[i].placa+'?'))return;
+  fetch(API_AGEND,{method:'POST',headers:authHeaders(),body:JSON.stringify({action:'delete',id:AG[i].id})})
+  .then(function(r){return r.json();})
+  .then(function(d){if(d.success){toast('Excluído','success');fetchAgend();}else toast(d.error||'Erro','error');})
+  .catch(function(){toast('Erro de conexão','error');});
+}
+
+/* ==================================================================
+   CONCLUIR AGENDAMENTO → REGISTRAR SERVIÇO
+   ================================================================== */
+function openConcluir(i){
+  var a=AG[i];
+  document.getElementById('cf_agendId').value=a.id;
+  document.getElementById('cf_placa').value=a.placa||'';
+  document.getElementById('cf_modelo').value=a.modelo||'';
+  document.getElementById('cf_tipo').value=a.tracao||'';
+  document.getElementById('cf_km').value='';
+  document.getElementById('cf_entrada').value=toLocalDT(a.dataAgendamento);
+  document.getElementById('cf_termino').value='';
+  document.getElementById('cf_tipoServico').value=a.tipoServico||a.TipoDeServico||'';
+  document.getElementById('cf_localServico').value='';
+  document.getElementById('cf_localRealizado').value=a.local||'';
+  document.getElementById('cf_contrato').value='';
+  document.getElementById('cf_os').value='';
+  document.getElementById('cfTitle').textContent='Concluir — '+a.placa;
+  document.getElementById('concluirFormBackdrop').classList.add('open');
+}
+function closeConcluir(e){if(e&&e.target!==document.getElementById('concluirFormBackdrop'))return;document.getElementById('concluirFormBackdrop').classList.remove('open');}
+
+function saveConcluir(e){
+  e.preventDefault();
+  var payload={
+    action:'concluir',
+    agendId:document.getElementById('cf_agendId').value,
+    placa:document.getElementById('cf_placa').value,
+    modelo:document.getElementById('cf_modelo').value,
+    tipo:document.getElementById('cf_tipo').value,
+    km:document.getElementById('cf_km').value,
+    entrada:document.getElementById('cf_entrada').value,
+    termino:document.getElementById('cf_termino').value,
+    tipoServico:document.getElementById('cf_tipoServico').value,
+    localServico:document.getElementById('cf_localServico').value,
+    localRealizado:document.getElementById('cf_localRealizado').value,
+    contrato:document.getElementById('cf_contrato').value,
+    os:document.getElementById('cf_os').value,
+    user:currentUser
+  };
+  fetch(API_AGEND,{method:'POST',headers:authHeaders(),body:JSON.stringify(payload)})
+  .then(function(r){return r.json();})
+  .then(function(d){
+    if(d.success){toast('Serviço registrado e agendamento concluído!','success');closeConcluir(null);fetchAgend();fetchHist();}
+    else toast(d.error||'Erro','error');
+  }).catch(function(){toast('Erro de conexão','error');});
+}
+
+/* ==================================================================
+   HISTÓRICO (Revisões Realizadas)
+   ================================================================== */
+function fetchHist(){
+  fetch(API_REV,{headers:authHeaders()})
+  .then(function(r){return r.json();})
+  .then(function(d){if(Array.isArray(d.items))HI=d.items;renderHist();})
+  .catch(function(){});
+}
+
+function renderHist(){
+  var q=(document.getElementById('histSearch').value||'').toLowerCase();
+  var sf=document.getElementById('histStatusFilter').value;
+  var rows=HI.filter(function(h){
+    if(sf&&(h.status||'')!==sf)return false;
+    if(q&&!(h.placa||'').toLowerCase().includes(q)&&!(h.modelo||'').toLowerCase().includes(q)&&!(h.tipoServico||'').toLowerCase().includes(q))return false;
+    return true;
+  });
+  var tb=document.getElementById('tb-hist');
+  document.getElementById('hist-count').textContent=rows.length+' '+plural(rows.length,'item','itens');
+  if(!rows.length){tb.innerHTML='<tr><td colspan="11" class="empty-cell">Nenhum registro encontrado</td></tr>';return;}
+  tb.innerHTML=rows.map(function(h){
+    var st=h.status||'Concluído';
+    var cls=st==='Concluído'?'b-conc':'b-pend';
+    return '<tr><td><span class="b '+cls+'">'+esc(st)+'</span></td>'+
+      '<td style="font-weight:700;font-family:monospace">'+esc(h.placa)+'</td>'+
+      '<td>'+esc(h.modelo)+'</td><td>'+esc(h.tipo)+'</td>'+
+      '<td>'+esc(h.tipoServico)+'</td><td>'+esc(h.localServico)+'</td>'+
+      '<td style="font-family:monospace">'+esc(h.km)+'</td>'+
+      '<td>'+fmtDateTime(h.entrada)+'</td><td>'+fmtDateTime(h.termino)+'</td>'+
+      '<td>'+fmtContrato(h.contrato)+'</td><td>'+esc(h.os)+'</td></tr>';
+  }).join('');
+}
+
+/* ==================================================================
+   ATUALIZAR BASE EXCEL
+   ================================================================== */
+function atualizarBase(){
+  if(!confirm('Atualizar KM e data na planilha Base de Revisões 3.0.1?\nIsso sincronizará os dados do histórico com o Excel.'))return;
+  var btn=document.getElementById('btnAtualizarBase');
+  btn.disabled=true;btn.textContent='Atualizando...';
+  fetch(API_UPDATE_BASE,{method:'POST',headers:authHeaders(),body:JSON.stringify({user:currentUser})})
+  .then(function(r){return r.json();})
+  .then(function(d){
+    btn.disabled=false;btn.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2v6h-6M3 12a9 9 0 0115.26-6.49L21 8M3 22v-6h6M21 12a9 9 0 01-15.26 6.49L3 16"/></svg> Atualizar Base Excel';
+    if(d.success){toast('Base atualizada! '+d.updated+' registros sincronizados.','success');}
+    else toast(d.error||'Erro ao atualizar base','error');
+  }).catch(function(){
+    btn.disabled=false;btn.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2v6h-6M3 12a9 9 0 0115.26-6.49L21 8M3 22v-6h6M21 12a9 9 0 01-15.26 6.49L3 16"/></svg> Atualizar Base Excel';
+    toast('Erro de conexão','error');
+  });
+}
+
+/* ==================================================================
+   GESTÃO DE FROTA (ADMIN)
+   ================================================================== */
+function fetchFrota(){
+  fetch(API_FROTA,{headers:authHeaders()})
+  .then(function(r){return r.json();})
+  .then(function(d){if(Array.isArray(d.veiculos))FROTA=d.veiculos;renderFrota();})
+  .catch(function(){});
+}
+
+// PRO START intervals
+var GNV_INTERVALS=[20000,35000,70000,105000,140000,175000,210000,245000,280000];
+var DIESEL_INTERVALS=[20000,40000,80000,120000,160000,200000,240000,280000];
+
+function calcProxRevisao(veiculo){
+  var tipoContrato=(veiculo.tipoContrato||'').toUpperCase().trim();
+  var modelo=(veiculo.modelo||'').toUpperCase();
+  var kmAtual=parseFloat(veiculo.kmAtual)||0;
+  var kmAtivacao=parseFloat(veiculo.kmAtivacao)||0;
+  var intervalo=parseFloat(veiculo.intervalo)||0;
+
+  if(tipoContrato.indexOf('PRO START')<0&&tipoContrato.indexOf('PRO_START')<0){
+    // S.CONTRATO: simple interval addition
+    var kmUltRev=parseFloat(veiculo.kmUltRevisao)||0;
+    return kmUltRev+intervalo;
+  }
+
+  // PRO START logic
+  var intervals=modelo.indexOf('GH 370')>=0?GNV_INTERVALS:DIESEL_INTERVALS;
+
+  // Find next interval threshold above current KM
+  for(var i=0;i<intervals.length;i++){
+    if(kmAtual<intervals[i])return intervals[i];
+  }
+  return intervals[intervals.length-1]; // max
+}
+
+function calcKmAtraso(veiculo){
+  var proxRev=calcProxRevisao(veiculo);
+  var kmAtual=parseFloat(veiculo.kmAtual)||0;
+  return proxRev-kmAtual; // positive = a vencer, negative = em atraso
+}
+
+function getStatusManutencao(veiculo){
+  var diff=calcKmAtraso(veiculo);
+  var tipoContrato=(veiculo.tipoContrato||'').toUpperCase();
+  var threshold=tipoContrato.indexOf('PRO')>=0?2000:5000;
+
+  if(diff<-5000)return 'CRÍTICO';
+  if(diff<0)return 'EM ATRASO';
+  if(diff<=threshold)return 'ANTECIPAÇÃO';
+  return 'EM DIA';
+}
+
+function getTipoManutencao(veiculo){
+  var tipoContrato=(veiculo.tipoContrato||'').toUpperCase();
+  if(tipoContrato.indexOf('PRO START')<0)return '—';
+  var modelo=(veiculo.modelo||'').toUpperCase();
+  var kmAtual=parseFloat(veiculo.kmAtual)||0;
+  var intervals,labels;
+
+  if(modelo.indexOf('GH 370')>=0){
+    // GNV plan
+    intervals=[20000,35000,70000,105000,140000,175000,210000,245000];
+    labels=['R - CAMINHÃO','X','S','X','M','X','S','X'];
+  }else{
+    // Diesel plan
+    intervals=[20000,40000,80000,120000,160000,200000,240000];
+    labels=['R','X','S','X','M','X','S'];
+  }
+
+  for(var i=0;i<intervals.length;i++){
+    if(kmAtual<intervals[i])return 'MANUTENÇÃO '+labels[i];
+  }
+  return 'MANUTENÇÃO X';
+}
+
+function renderFrota(){
+  var q=(document.getElementById('frotaSearch').value||'').toLowerCase();
+  var rows=FROTA.filter(function(v){
+    if(q&&!(v.placa||'').toLowerCase().includes(q)&&!(v.modelo||'').toLowerCase().includes(q)&&!(v.marca||'').toLowerCase().includes(q)&&!(v.operacao||'').toLowerCase().includes(q))return false;
+    return true;
+  });
+  var tb=document.getElementById('tb-frota');
+  document.getElementById('frota-count').textContent=rows.length+' '+plural(rows.length,'veículo','veículos');
+  if(!rows.length){tb.innerHTML='<tr><td colspan="16" class="empty-cell">Nenhum veículo encontrado</td></tr>';return;}
+  tb.innerHTML=rows.map(function(v,i){
+    var proxRev=calcProxRevisao(v);
+    var kmAtraso=calcKmAtraso(v);
+    var statusMan=getStatusManutencao(v);
+    var tipoMan=getTipoManutencao(v);
+    var cls=statusMan==='CRÍTICO'?'b-crit':statusMan==='EM ATRASO'?'b-atr':statusMan==='ANTECIPAÇÃO'?'b-ant':'b-dia';
+    var kmAtrasoFmt=kmAtraso>=0?'+'+fmtNum(kmAtraso):fmtNum(kmAtraso);
+    return '<tr>'+
+      '<td style="font-weight:700;font-family:monospace">'+esc(v.placa)+'</td>'+
+      '<td>'+esc(v.marca)+'</td>'+
+      '<td>'+esc(v.modelo)+'</td>'+
+      '<td>'+esc(v.operacao)+'</td>'+
+      '<td style="font-family:monospace;text-align:right">'+fmtNum(v.kmAtual)+'</td>'+
+      '<td>'+esc(v.ano)+'</td>'+
+      '<td style="font-size:11px;font-family:monospace">'+esc(v.chassi)+'</td>'+
+      '<td>'+fmtContrato(v.tipoContrato)+'</td>'+
+      '<td style="font-family:monospace;text-align:right">'+fmtNum(v.kmAtivacao)+'</td>'+
+      '<td style="font-family:monospace;text-align:right">'+fmtNum(v.intervalo)+'</td>'+
+      '<td><span class="b '+cls+'">'+statusMan+'</span></td>'+
+      '<td style="font-family:monospace;text-align:right">'+fmtNum(v.kmUltRevisao)+'</td>'+
+      '<td style="font-family:monospace;text-align:right">'+fmtNum(proxRev)+'</td>'+
+      '<td>'+esc(tipoMan)+'</td>'+
+      '<td style="font-family:monospace;text-align:right;font-weight:700;color:'+(kmAtraso<0?'var(--red)':kmAtraso<=2000?'var(--amber)':'var(--green)')+'">'+kmAtrasoFmt+'</td>'+
+      '<td><button class="act-btn" onclick="editVeic('+i+')">Editar</button> <button class="act-btn red" onclick="deleteVeic('+i+')">Excluir</button></td>'+
+      '</tr>';
+  }).join('');
+}
+
+/* ==================================================================
+   VEHICLE CRUD (FROTA)
+   ================================================================== */
+function openVeicForm(data){
+  document.getElementById('vf_id').value=data?data.id:'';
+  document.getElementById('vf_placa').value=data?data.placa:'';
+  document.getElementById('vf_marca').value=data?data.marca:'';
+  document.getElementById('vf_modelo').value=data?data.modelo:'';
+  document.getElementById('vf_operacao').value=data?data.operacao:'';
+  document.getElementById('vf_km').value=data?data.kmAtual:'';
+  document.getElementById('vf_ano').value=data?data.ano:'';
+  document.getElementById('vf_chassi').value=data?data.chassi:'';
+  document.getElementById('vf_tipoContrato').value=data?data.tipoContrato:'';
+  document.getElementById('vf_kmAtivacao').value=data?data.kmAtivacao:'';
+  document.getElementById('vf_intervalo').value=data?data.intervalo:'';
+  document.getElementById('vf_kmUltRevisao').value=data?data.kmUltRevisao:'';
+  document.getElementById('vf_tipo').value=data?data.tipo:'';
+  document.getElementById('veicFormTitle').textContent=data?'Editar Veículo — '+data.placa:'Novo Veículo';
+  document.getElementById('veicFormBackdrop').classList.add('open');
+}
+function closeVeicForm(e){if(e&&e.target!==document.getElementById('veicFormBackdrop'))return;document.getElementById('veicFormBackdrop').classList.remove('open');}
+
+function saveVeic(e){
+  e.preventDefault();
+  var id=document.getElementById('vf_id').value;
+  var payload={
+    action:id?'update':'create',
+    id:id||undefined,
+    placa:document.getElementById('vf_placa').value.toUpperCase(),
+    marca:document.getElementById('vf_marca').value,
+    modelo:document.getElementById('vf_modelo').value,
+    operacao:document.getElementById('vf_operacao').value,
+    kmAtual:document.getElementById('vf_km').value,
+    ano:document.getElementById('vf_ano').value,
+    chassi:document.getElementById('vf_chassi').value,
+    tipoContrato:document.getElementById('vf_tipoContrato').value,
+    kmAtivacao:document.getElementById('vf_kmAtivacao').value,
+    intervalo:document.getElementById('vf_intervalo').value,
+    kmUltRevisao:document.getElementById('vf_kmUltRevisao').value,
+    tipo:document.getElementById('vf_tipo').value
+  };
+  fetch(API_VEICULOS,{method:'POST',headers:authHeaders(),body:JSON.stringify(payload)})
+  .then(function(r){return r.json();})
+  .then(function(d){
+    if(d.success){toast('Veículo salvo!','success');closeVeicForm(null);fetchFrota();}
+    else toast(d.error||'Erro ao salvar','error');
+  }).catch(function(){toast('Erro de conexão','error');});
+}
+
+function editVeic(i){openVeicForm(FROTA[i]);}
+
+function deleteVeic(i){
+  if(!confirm('Remover veículo '+FROTA[i].placa+' da base?'))return;
+  fetch(API_VEICULOS,{method:'POST',headers:authHeaders(),body:JSON.stringify({action:'delete',id:FROTA[i].id})})
+  .then(function(r){return r.json();})
+  .then(function(d){if(d.success){toast('Removido','success');fetchFrota();}else toast(d.error||'Erro','error');})
+  .catch(function(){toast('Erro de conexão','error');});
+}
+
+/* ==================================================================
+   MODAL DETALHES
+   ================================================================== */
+function showModal(type,idx){
+  var d=type==='r'?_rRows[idx]:type==='t'?_tRows[idx]:AG[idx];
+  if(!d)return;
+  document.getElementById('mPlaca').textContent=d.placa||'—';
+  if(type==='r'){
+    document.getElementById('mSub').textContent=(d.marca?d.marca+' · ':'')+esc2(d.modelo);
+    document.getElementById('mBody').innerHTML=buildRevModal(d);
+  }else if(type==='t'){
+    document.getElementById('mSub').textContent=(d.marca?d.marca+' · ':'')+esc2(d.modelo)+' · Tacógrafo';
+    document.getElementById('mBody').innerHTML=buildTacModal(d);
+  }else{
+    document.getElementById('mSub').textContent=esc2(d.modelo)+' · Agendamento';
+    document.getElementById('mBody').innerHTML=buildAgendModal(d);
+  }
+  document.getElementById('modalBackdrop').classList.add('open');
+  document.addEventListener('keydown',onModalKey);
+}
+function closeModal(e){if(e&&e.target!==document.getElementById('modalBackdrop'))return;document.getElementById('modalBackdrop').classList.remove('open');document.removeEventListener('keydown',onModalKey);}
+function onModalKey(e){if(e.key==='Escape')closeModal(null);}
+
+function mf(label,val,opts){
+  var classes='modal-field'+(opts&&opts.full?' full':'');
+  var vclass='mf-val'+(opts&&opts.mono?' mono':'')+(opts&&opts.large?' large':'');
+  return '<div class="'+classes+'"><div class="mf-label">'+label+'</div><div class="'+vclass+'">'+((val!==null&&val!==''&&val!==undefined)?esc(String(val)):'—')+'</div></div>';
+}
+function mBadge(label,val,badgeClass){
+  return '<div class="modal-field"><div class="mf-label">'+label+'</div><div class="mf-val"><span class="b '+badgeClass+'">'+esc(String(val||'—'))+'</span></div></div>';
+}
+function esc2(v){return v||'';}
+
+function buildRevModal(r){
+  var cls=r.status==='CRÍTICO'?'b-cd':r.status==='EM ATRASO'?'b-c':'b-a';
+  var km=parseFloat(r.kmAtraso||0);var kmStr=isNaN(km)?'—':(km>0?'+':'')+km.toLocaleString('pt-BR')+' km';
+  return '<div class="modal-section"><div class="modal-section-title">Identificação do Veículo</div><div class="modal-grid">'+
+    mf('Marca',r.marca)+mf('Modelo',r.modelo)+mf('Tipo',r.tipo)+mf('Operação',r.operacao,{full:true})+
+    '</div></div><div class="modal-section"><div class="modal-section-title">Situação da Revisão</div><div class="modal-grid">'+
+    mBadge('Status',r.status,cls)+mf('Tipo de Revisão',r.tipoRevisao)+
+    mf('KM Atual',r.kmAtual?(parseFloat(r.kmAtual)||0).toLocaleString('pt-BR')+' km':null,{mono:true})+
+    mf('KM Próx. Revisão',r.kmProxRevisao?(parseFloat(r.kmProxRevisao)||0).toLocaleString('pt-BR')+' km':null,{mono:true})+
+    mf('Atraso / A Vencer',kmStr,{mono:true})+mf('Últ. Revisão',r.dataUltRevisao)+
+    '</div></div><div class="modal-section"><div class="modal-section-title">Contrato</div><div class="modal-grid">'+
+    '<div class="modal-field full"><div class="mf-label">Tipo de Contrato</div><div class="mf-val">'+fmtContrato(r.tipoContrato)+'</div></div></div></div>';
+}
+
+function buildTacModal(t){
+  var cls=t.status==='VENCIDO'?'b-c':t.status==='VENCE HOJE'?'b-s':'b-a';
+  var prazo=parseFloat(t.prazo);var prazoStr=isNaN(prazo)?'—':(prazo<0?prazo+' dias':(prazo===0?'Vence Hoje':prazo+' dias'));
+  return '<div class="modal-section"><div class="modal-section-title">Identificação do Veículo</div><div class="modal-grid">'+
+    mf('Marca',t.marca)+mf('Modelo',t.modelo)+mf('Operação',t.operacao,{full:true})+
+    '</div></div><div class="modal-section"><div class="modal-section-title">Situação do Tacógrafo</div><div class="modal-grid">'+
+    mBadge('Status',t.status,cls)+mf('Prazo Restante',prazoStr,{mono:true})+
+    mf('Data de Emissão',t.dataEmissao)+mf('Data de Vencimento',t.dataVencimento,{large:true})+
+    '</div></div>';
+}
+
+function buildAgendModal(a){
+  var st=a.status||'Pendente';
+  var cls=st==='Concluído'?'b-conc':st==='Cancelado'?'b-canc':'b-pend';
+  return '<div class="modal-section"><div class="modal-section-title">Dados do Agendamento</div><div class="modal-grid">'+
+    mBadge('Status',st,cls)+mf('Código',a.codigo,{mono:true})+
+    mf('Modelo',a.modelo)+mf('Tração',a.tracao)+
+    mf('Tipo de Serviço',a.tipoServico||a.TipoDeServico||'',{full:true})+
+    mf('Data Agendamento',fmtDateTime(a.dataAgendamento),{full:true})+
+    mf('Local',a.local,{full:true})+
+    '</div></div>';
+}
+
+/* ==================================================================
+   HELPERS
+   ================================================================== */
+function fmtContrato(v){
+  if(!v&&v!==0)return '—';
+  var s=String(v).trim().toUpperCase();
+  if(s.includes('PRO')&&s.includes('START'))return '<span class="b b-prostart">'+esc(v)+'</span>';
+  if(s.startsWith('S.')&&(s.includes('CONTRATO')||s.includes('CONTR')))return '<span class="b b-scontrato">'+esc(v)+'</span>';
+  if(s==='SEM CONTRATO'||s.startsWith('SEM CONT'))return '<span class="b b-scontrato">'+esc(v)+'</span>';
+  return esc(v);
+}
+function esc(v){if(!v&&v!==0)return '';return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function fmtKm(v){var n=parseFloat(v);if(isNaN(n))return v||'—';return n.toLocaleString('pt-BR')+' km';}
+function fmtNum(v){var n=parseFloat(v);if(isNaN(n))return '—';return n.toLocaleString('pt-BR');}
+function fmtTS(iso){if(!iso)return '—';try{var d=new Date(iso);return d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});}catch(e){return iso;}}
+function fmtDateTime(v){if(!v)return '—';try{var d=new Date(v);if(isNaN(d))return v;return d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});}catch(e){return v;}}
+function toLocalDT(v){if(!v)return '';try{var d=new Date(v);if(isNaN(d))return '';return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')+'T'+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}catch(e){return '';}}
+function plural(n,s,p){return n===1?s:p;}
+function updateClock(){var el=document.getElementById('clock');if(el)el.textContent=new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});}
+function setStatus(state,msg){document.getElementById('sDot').className='sdot '+state;document.getElementById('sTxt').textContent=msg;}
+function tryLoadCache(){try{var s=localStorage.getItem(CACHE_KEY);return s?JSON.parse(s):null;}catch(e){return null;}}
+function saveCache(d){try{localStorage.setItem(CACHE_KEY,JSON.stringify({revisoes:d.revisoes||[],tacografos:d.tacografos||[],atualizado:d.atualizado||new Date().toISOString()}));}catch(e){}}
+function toggleTheme(){var t=document.documentElement.getAttribute('data-theme');var nt=t==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',nt);try{localStorage.setItem('theme',nt);}catch(e){}}
+
+function toast(msg,type){
+  var el=document.getElementById('toast');
+  el.textContent=msg;el.className='toast show '+(type||'info');
+  clearTimeout(el._t);el._t=setTimeout(function(){el.classList.remove('show');},4000);
+}
+
+function exportCSV(){
+  var rRows=filterRev();var tRows=filterTac();
+  var csv='﻿';
+  csv+='REVISÕES\nStatus,Placa,Marca,Modelo,Operação,KM Atual,KM Próx.,KM Atraso/Vencer,Tipo Revisão,Contrato,Últ. Revisão\n';
+  csv+=rRows.map(function(r){return[r.status,r.placa,r.marca,r.modelo,r.operacao,r.kmAtual,r.kmProxRevisao,r.kmAtraso,r.tipoRevisao,r.tipoContrato,r.dataUltRevisao].map(function(v){return'"'+String(v||'')+'"';}).join(',');}).join('\n');
+  csv+='\n\nTACÓGRAFOS\nStatus,Placa,Marca,Modelo,Operação,Dt. Emissão,Dt. Vencimento,Prazo (dias)\n';
+  csv+=tRows.map(function(t){return[t.status,t.placa,t.marca,t.modelo,t.operacao,t.dataEmissao,t.dataVencimento,t.prazo].map(function(v){return'"'+String(v||'')+'"';}).join(',');}).join('\n');
+  var a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download='painel-revisoes-'+new Date().toISOString().split('T')[0]+'.csv';a.click();
+}
+
+/* ==================================================================
+   INIT
+   ================================================================== */
+window.onload=function(){
+  try{var t=localStorage.getItem('theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}
+  checkAuth();
+};
+</script>
+</body>
+</html>
